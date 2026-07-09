@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#12161D" />
+<title>Codex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:ital,opsz@0,6..72;1,6..72&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --base:#12161D; --panel:#1A1F28; --panel2:#20262F; --line:#2A313D;
+  --parch:#E9E3D5; --parch-dim:#C4BEB0; --muted:#868E9C; --muted2:#5C6473;
+  --brass:#C6A24C; --brass-dim:#8C7538; --verdi:#6FA392; --err:#C97A6A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{background:var(--base);color:var(--parch);font-family:'Inter',system-ui,sans-serif;}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+.shell{width:100%;max-width:500px;min-height:100vh;display:flex;flex-direction:column;position:relative;}
+
+.head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--line);}
+.word{font-family:'Fraunces',serif;font-weight:600;font-size:19px;letter-spacing:.14em;text-transform:uppercase;}
+.word .dot{color:var(--brass);}
+.streak{display:flex;flex-direction:column;align-items:flex-end;line-height:1;}
+.streak .n{font-family:'Fraunces',serif;font-size:22px;color:var(--brass);font-weight:600;}
+.streak .l{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+
+.body{flex:1;overflow-y:auto;padding:22px 22px 100px;}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.h1{font-family:'Fraunces',serif;font-size:26px;font-weight:500;line-height:1.15;margin-bottom:4px;}
+.sub{color:var(--muted);font-size:13px;margin-bottom:22px;}
+
+.stage{perspective:1400px;margin:8px 0 20px;}
+.card{position:relative;width:100%;min-height:330px;transition:transform .55s cubic-bezier(.4,.05,.2,1);transform-style:preserve-3d;cursor:pointer;}
+.card.flip{transform:rotateY(180deg);}
+@media (prefers-reduced-motion:reduce){.card{transition:none;}}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);padding:26px 24px;display:flex;flex-direction:column;overflow-y:auto;box-shadow:0 18px 40px -24px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.03);}
+.face.back{transform:rotateY(180deg);border-color:var(--brass-dim);}
+.tag-row{display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+.chip{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);border:1px solid var(--brass-dim);border-radius:999px;padding:3px 9px;}
+.chip.dom{color:var(--muted);border-color:var(--line);}
+.front-txt{font-family:'Fraunces',serif;font-size:24px;line-height:1.3;font-weight:500;margin:auto 0;}
+.back-txt{font-family:'Newsreader',serif;font-size:18px;line-height:1.55;}
+.flip-hint{margin-top:auto;padding-top:18px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
+
+.rate{display:flex;gap:12px;margin-top:4px;}
+.btn{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--parch);border-radius:11px;padding:15px 0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:transform .1s ease,border-color .15s;}
+.btn:active{transform:translateY(1px);}
+.btn.again{color:var(--parch-dim);}.btn.again:hover{border-color:var(--err);}
+.btn.got{border-color:var(--brass-dim);color:var(--brass);}.btn.got:hover{border-color:var(--brass);}
+.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+.dismiss-row{display:flex;justify-content:center;margin-top:14px;}
+.dismiss{background:none;border:none;color:var(--parch-dim);font-family:'Inter',sans-serif;font-size:12.5px;letter-spacing:.02em;cursor:pointer;opacity:.55;transition:opacity .15s,color .15s;padding:6px 10px;}
+.dismiss:hover{opacity:1;color:var(--err);}
+.dismiss:focus-visible{outline:2px solid var(--err);outline-offset:2px;opacity:1;}
+
+.dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s;}
+.dot.on{background:var(--brass);}.dot.now{background:var(--parch);transform:scale(1.25);}
+
+.center{text-align:center;padding:48px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.center .mark{font-family:'Fraunces',serif;font-size:40px;color:var(--brass);line-height:1;}
+.center h3{font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin-top:6px;}
+.center p{color:var(--muted);font-size:14px;max-width:280px;line-height:1.5;}
+
+.search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;color:var(--parch);font-family:'Inter',sans-serif;font-size:15px;margin-bottom:20px;}
+.search::placeholder{color:var(--muted2);}.search:focus{outline:none;border-color:var(--brass-dim);}
+.dom-h{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 4px;cursor:pointer;}
+.dom-h.first{margin-top:0;}
+.dom-name{font-family:'Fraunces',serif;font-size:17px;font-weight:500;letter-spacing:.02em;}
+.dom-count{font-size:11px;color:var(--muted);letter-spacing:.1em;}
+.dom-rule{height:1px;background:var(--line);margin:8px 0 12px;}
+.item{border-left:2px solid var(--line);padding:11px 0 11px 14px;margin-bottom:2px;cursor:pointer;transition:border-color .15s;}
+.item:hover{border-color:var(--brass-dim);}
+.item .t{font-family:'Newsreader',serif;font-size:16px;line-height:1.3;}
+.item .m{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
+
+.field{margin-bottom:16px;}
+.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:block;}
+.input,.area,.select{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--parch);font-family:'Inter',sans-serif;font-size:15px;}
+.area{font-family:'Newsreader',serif;font-size:17px;line-height:1.5;min-height:110px;resize:vertical;}
+.input:focus,.area:focus,.select:focus{outline:none;border-color:var(--brass-dim);}
+.seg{display:flex;gap:8px;}
+.seg button{flex:1;padding:11px 0;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;}
+.seg button.on{border-color:var(--brass-dim);color:var(--brass);background:var(--panel2);}
+.save{width:100%;margin-top:6px;background:var(--brass);color:#1a1206;border:none;border-radius:11px;padding:15px 0;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
+.save:active{transform:translateY(1px);}.save:disabled{opacity:.4;cursor:default;}
+.danger{width:100%;margin-top:10px;background:transparent;color:var(--err);border:1px solid var(--line);border-radius:11px;padding:13px 0;font-size:14px;cursor:pointer;}
+
+.detail-txt{font-family:'Newsreader',serif;font-size:19px;line-height:1.6;margin:16px 0;}
+.back-link{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:16px;font-family:'Inter',sans-serif;}
+.meta-line{font-size:12px;color:var(--muted);letter-spacing:.05em;margin-top:8px;}
+
+.data-row{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);}
+.data-row .label{margin-bottom:12px;}
+.data-btns{display:flex;gap:10px;}
+.data-btns button{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--parch-dim);border-radius:10px;padding:12px 0;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;}
+.data-btns button:hover{border-color:var(--brass-dim);}
+.data-note{font-size:11px;color:var(--muted2);margin-top:10px;line-height:1.5;}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:var(--panel2);border:1px solid var(--brass-dim);color:var(--brass);padding:11px 20px;border-radius:999px;font-size:13px;z-index:50;box-shadow:0 10px 30px -12px rgba(0,0,0,.8);opacity:0;transition:opacity .2s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;display:flex;background:var(--panel);border-top:1px solid var(--line);z-index:40;padding-bottom:env(safe-area-inset-bottom);}
+.tab{flex:1;padding:13px 0 16px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--muted2);font-family:'Inter',sans-serif;position:relative;}
+.tab.on{color:var(--brass);}
+.tab svg{width:22px;height:22px;}
+.tab .lb{font-size:10px;letter-spacing:.1em;text-transform:uppercase;}
+.badge{position:absolute;top:6px;left:calc(50% + 6px);background:var(--brass);color:#1a1206;font-size:9px;font-weight:600;border-radius:999px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="head">
+    <div class="word">Codex<span class="dot">.</span></div>
+    <div class="streak"><span class="n" id="streakN">0</span><span class="l">day streak</span></div>
+  </header>
+  <main class="body" id="body"></main>
+  <div class="toast" id="toast"></div>
+  <nav class="tabs" id="tabs"></nav>
+</div>
+<input type="file" id="importFile" accept="application/json" style="display:none" />
+
+<script>
+/* ── Config ── */
+const DOMAINS = { Home:["Parenting","Marriage","Faith"], Work:["Leadership","Habits & Systems"], Body:["Lifting","Nutrition"], Mind:["Growth","Money"] };
+const DOMAIN_OF = {}; Object.entries(DOMAINS).forEach(([d,ts])=>ts.forEach(t=>DOMAIN_OF[t]=d));
+const BOX_DAYS = {1:1,2:2,3:4,4:7,5:14,6:30,7:60}; const MAX_BOX=7;
+const KEY = "codex:data:v1";
+
+/* ── Date helpers ── */
+const pad=n=>String(n).padStart(2,"0");
+const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+const addDays=(iso,n)=>{const[y,m,d]=iso.split("-").map(Number);const dt=new Date(y,m-1,d+n);return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;};
+const diffDays=(a,b)=>{const[ay,am,ad]=a.split("-").map(Number);const[by,bm,bd]=b.split("-").map(Number);return Math.round((new Date(ay,am-1,ad)-new Date(by,bm-1,bd))/86400000);};
+let _id=0; const nid=()=>`c${Date.now().toString(36)}${(_id++).toString(36)}`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ── Seed ── */
+function seed(){
+  const t=todayStr();
+  const mkc=(topic,front,back,source)=>({id:nid(),topic,domain:DOMAIN_OF[topic],front,back,box:1,due:t,created:t,source});
+  return [
+    mkc("Parenting","The discipline flow","Name the behavior \u2192 clear instruction \u2192 one warning \u2192 a related consequence \u2192 reconnect. Reconnect is not optional. It's the step that keeps the relationship intact after the correction.","Whole Parent framework"),
+    mkc("Parenting","My triggers","Non-compliance, whining, disrespect. When I feel the heat rise, that's the cue to slow down, not speed up. Regulate myself first, then address the behavior.","Personal + Whole Parent"),
+    mkc("Parenting","Why my kids can trigger me like no one else","Two reasons: closeness (they live inside my boundaries) and projection (their behavior replays my own childhood). What I was shamed for as a kid \u2014 backtalk, whining, mess \u2014 is what will heat me up as a dad. If my reaction is bigger than the behavior, it's my history talking.","Jon Fogel \u2014 How to Not Lose Your Sh*t"),
+    mkc("Parenting","Never assume attention","Kids' brains can't multitask. Most \"not listening\" is \"never actually heard you.\" Get full attention first \u2014 hand on shoulder, pause the tablet \u2014 then speak. And give the tablet back for a minute after, so my voice doesn't equal the fun ending.","Jon Fogel \u2014 How to Get Your Kid to Listen"),
+    mkc("Parenting","Say less","Use the fewest words that carry the point. Every extra sentence dilutes the instruction and invites tune-out. One clear ask beats a lecture every time.","Jon Fogel"),
+    mkc("Parenting","Be worth coming back to","You can't out-chase what's more fun than you \u2014 the dog only came back when chasing stopped. Don't yell across the house; make coming to me safe, calm, and worth it. They ignore what's less interesting than what they're doing, so change the draw, not the volume.","Jon Fogel"),
+    mkc("Parenting","Redirect to the positive","Say the behavior I want, not the one I don't. \"Feet on the floor,\" not \"stop kicking.\" A brain hears the action either way \u2014 point it at the right one.","Whole Parent group coaching"),
+    mkc("Parenting","Praise the pivot","Don't praise generic good behavior \u2014 praise the moment she catches herself mid-frustration and changes course. That's the skill being built. Spotlight self-correction, and you get more of it.","Whole Parent group coaching"),
+    mkc("Parenting","Whining works \u2014 that's why they do it","Parents' brains are wired to find the whine sound impossible to ignore; it survives because it's effective. Distinguish attention-whining (teach the ask: normal voice gets the response) from complaining at a struggle (meet with empathy plus confidence, not rescue).","Whole Parent group coaching"),
+    mkc("Parenting","Sibling rivalry is a scarcity contest","Rivalry is natural and spikes where resources feel scarce \u2014 attention, who's first, who gets the ketchup. Same kids play great at the park. Reduce the contest (predictable turns, individual attention) instead of refereeing every skirmish.","Whole Parent group coaching"),
+    mkc("Parenting","Embracing her anger \u2014 the 5 steps","1) Name and affirm: \"Your anger is safe with me.\" 2) Stay near, even if told to go away. 3) Strong, safe limits: \"You can be angry AND I won't let you hit.\" 4) Reflect and teach later, when calm. 5) Track her triggers so I'm regulated before it starts.","Julie Fragnito \u2014 Embracing Your Child's Anger"),
+    mkc("Parenting","Anger prevention is 20 minutes a day","Twenty undistracted minutes in each daughter's world daily, predictable routines, all feelings allowed at home, lots of physical connection and laughter. Anger prevention is mostly presence, done in advance.","Julie Fragnito"),
+    mkc("Parenting","Boredom is a feature, not a problem","Don't fix it \u2014 tolerate it. Set clear expectations the day before, then let them whine through the discomfort. Boredom is where creativity, self-trust, and problem-solving grow. Solving it for them teaches them to depend on me for entertainment.","Julie Fragnito \u2014 Handling Boredom"),
+    mkc("Parenting","Emilia: the prompt is the threat","Her rejection is anxiety-driven, not sensory. \"It's disgusting\" is a preemptive shutdown \u2014 her nervous system reads the ask, not the food. Zero food pressure at the table: safe food always on her plate, new foods exist nearby without comment, meals stay easy.","Emilia feeding guide"),
+    mkc("Parenting","Emilia: don't over-praise a try","When she tries something, react like it's any normal thing: \"Oh yeah? What did you think?\" Over-praising spotlights the act and raises the anxiety next time. New foods: one at a time, snack context first, 10\u201320 quiet appearances before judging.","Emilia feeding guide"),
+    mkc("Parenting","Our marriage is their first relationship lesson","Kids absorb how we disagree. Disagree respectfully in the open \u2014 no slammed doors, no silent treatment \u2014 and let them see the apology and resolution too. Never let a child pick a side. And own my own mood: nobody else is responsible for it.","Julie Fragnito \u2014 Partnership Lessons"),
+    mkc("Parenting","World-ready kids do real things","Life skills come from real missions \u2014 manage $10 at the grocery store, order at the counter, make eye contact and say thank you. Then reflect together: what did you learn about yourself? Experience plus reflection is the curriculum.","Lauren Magers \u2014 7 Excursions"),
+    mkc("Marriage","Megan's love languages","Acts of service and quality time. Small consistent gestures beat rare grand ones. Ask each day: what did I do that she'd actually feel?","Personal"),
+    mkc("Marriage","Gentleman habits","The little things I let slide are the things she notices. Consistency is the gift. Earn it daily \u2014 don't coast on the wedding.","Personal"),
+    mkc("Marriage","The SEEN method","Before blaming, run the four questions: What am I Scared of? What am I Embarrassed about? What was I Expecting that I never said? What do I Need? Name the fear underneath instead of firing blame outward.","Morgan Burch \u2014 Dare to be SEEN"),
+    mkc("Marriage","The truth is in the triggers","We resent people for doing things we don't feel allowed to do ourselves. And we expect others to react the way we would \u2014 but they're not us. When Megan's behavior stings, check whose rule got broken before assuming hers did.","Morgan Burch"),
+    mkc("Marriage","Three lines that stop a fight","\"That didn't feel good \u2014 what was your intention?\" \u00b7 \"I'm feeling defensive \u2014 can you share that another way?\" \u00b7 \"When you said that, I thought you meant ___ \u2014 what did you actually mean?\" Each one swaps accusation for curiosity mid-conflict.","Morgan Burch"),
+    mkc("Marriage","Understand, don\u2019t rush to forgive","Trying to forgive keeps score; understanding closes the gap. A fast apology is often a way to skip the discomfort and \u201cmove on\u201d \u2014 when I\u2019m the hurt one, get curious about her intention before I demand one. Blame is drinking poison and expecting her to apologize for it. If I feel misunderstood, she probably does too \u2014 mirror first.","Morgan Burch"),
+    mkc("Marriage","Keep the simmer going","Connection at 10pm is built at 7am. A 6-second kiss, a 30-second hug, and specific gratitude (\"thank you for packing lunches\") maintain baseline connection all day. Gratitude is the #1 research predictor of marital satisfaction.","Vanessa & Xander Marin"),
+    mkc("Marriage","Sex is not a to-do item","91% of parents say intimacy got harder after kids and the #1 blocker is time \u2014 so it slides down the list as a \u201cluxury.\u201d But it isn't another task to deprioritize like a bubble bath: it's quality time, vulnerability, and presence in one act, one of the most efficient forms of connection we have. If I can't prioritize it for us, prioritize it for the marriage the girls are learning from.","Vanessa & Xander Marin"),
+    mkc("Marriage","Daily connection rituals","Morning coffee together before the day starts. Phone-free dinner. One thing I admire about her, out loud. A nightly \"clean-up conversation\" to clear small tensions before they compound. Small, daily, non-negotiable.","The Libido Fairy \u2014 17 Rituals"),
+    mkc("Marriage","Score the eight areas yearly","Emotional connection, touch, spiritual unity, sexual intimacy, finances, communication, friendship/flirting \u2014 each of us rates every area 1\u201310 alone, then compare. Pick ONE area for the year and set goals together. Don't fix everything; fix the lowest thing.","Ultimate Intimacy \u2014 goal setting"),
+    mkc("Marriage","The drift is quiet","Disconnection doesn't arrive as a fight. It arrives as scrolling while she's mid-sentence, and a \"how was your day\" that stopped waiting for the answer. The smallest moments of attention \u2014 or inattention \u2014 compound harder than any argument.","Dr. Tracy D"),
+    mkc("Marriage","Guard against porn","It erodes trust through secrecy, desensitizes dopamine so real intimacy satisfies less, sets false expectations, and objectifies. Protecting my eyes is protecting our intimacy \u2014 this is maintenance, not paranoia.","Ultimate Intimacy \u2014 research summary"),
+    mkc("Marriage","The same argument means an unmet need","When a fight repeats, it's never about the topic \u2014 the dishes are a costume on a need (feeling valued, heard, chosen). Solve the need and the argument dies; win the topic and it comes back next week.","Lovethinks / Morgan"),
+    mkc("Faith","Presence is a practice","Being fully with my family is a choice, not a mood. The phone and the game are the test. Choose them on purpose.","Personal"),
+    mkc("Faith","A Rule of Life","A schedule and set of practices that create space to be with Jesus, become like Jesus, and do what Jesus did. The spiritual life doesn't happen in leftover time \u2014 design the rhythm like I design everything else.","Practicing the Way \u2014 Rule of Life"),
+    mkc("Faith","Identity before habits","I don't need more information; I need inner formation. Habits flow from who I believe I am. Anything rooted in fear, guilt, or shame is a false identity \u2014 I was created on purpose, for a purpose, and made for more. Live from that.","Brian Pruett \u2014 Elevate Your Life"),
+    mkc("Faith","AM and PM rhythms","PM: digest (no food an hour before bed), rest (airplane mode, disconnect), read. AM: water, movement, gratitude. Let go at night; step into thankfulness in the morning. Gratitude is the superpower.","Brian Pruett"),
+    mkc("Faith","Spiritual unity with Megan","Worship together, pray for each other's specific needs, keep God and family as the shared priority. Spiritual unity is a marriage area to actively score and grow \u2014 not a private track we each run alone.","Ultimate Intimacy \u2014 spiritual unity"),
+    mkc("Leadership","Executive visibility","Leaders can't reward what they can't see. Translate my team's work into the outcomes leaders actually care about \u2014 frame it in their language and tie the effort to impact, not activity.","Personal framework"),
+    mkc("Leadership","Own the work","When someone tries to redirect ownership of what I built, name it plainly and keep the receipts. Line up my backing before the conversation, not during it.","Personal framework"),
+    mkc("Leadership","Talking more isn't leading","The Babble Hypothesis: people who talk most get read as leaders \u2014 and it derails careers. In the chair, my job is facilitating, not dominating. As the junior voice in a senior room: fewer, sharper contributions. Every meeting is a job interview.","Your CEO Mentor \u2014 ep. 409"),
+    mkc("Leadership","Stop protecting the wrong people","Shielding an underperformer feels kind and demoralizes everyone else: the weakest player smells the fear, the strongest is updating their resume. Protecting one person's comfort at the team's expense is a leadership failure, not compassion.","Your CEO Mentor"),
+    mkc("Leadership","Empathy, not sympathy","Feel with them; don't take the problem from them. The line strong leaders never cross: caring about the person becoming carrying their accountability. Support the human, hold the standard.","Your CEO Mentor"),
+    mkc("Leadership","Unreasonable hospitality","Give people a level of care that's beyond reasonable \u2014 and treat adversity as the moment to create the story people retell. Problems handled extraordinarily build more loyalty than no problems at all.","Will Guidara via CGLP"),
+    mkc("Leadership","The warrior mindset isn't the grind","It's not gritting teeth, hiding weakness, and working until collapse \u2014 that's the version being sold. It's disciplined stewardship of energy, honest self-assessment, and showing up ready. Recovery is part of the fight.","Order of Man"),
+    mkc("Leadership","Processes unlock scale","If the operation depends on me personally, I built a job, not a system. Document it, delegate it, and systemize until the team runs well when I'm not in the room. Busy meetings and full calendars can hide total key-person dependency.","Eric Partaker"),
+    mkc("Leadership","Get them talking","The small-talk skill isn't having lines to say \u2014 it's questions that get the other person talking about themselves. Curiosity carries every conversation; the person who feels heard remembers you as brilliant.","Cole Jennette \u2014 Small Talk Toolkit"),
+    mkc("Leadership","The half-year review","Three questions at midyear: What did the first half teach me? What's working that I should double down on? What should I stop entirely? Look back on purpose before planning forward.","Eric Partaker"),
+    mkc("Leadership","The comfort of inaction","The hardest part of every payoff is convincing yourself to start. Introvert, anxious, doesn't matter \u2014 long-term ambitions die in comfortable avoidance, not in failure. Do the uncomfortable thing first.","Your CEO Mentor \u2014 Moment 179"),
+    mkc("Habits & Systems","Prompt playbook structure","Every reusable prompt: role, context, task, format, one example. Vague prompts get vague output. Always specify the format you want back.","Personal \u2014 AI Prompt Playbook v2.0"),
+    mkc("Habits & Systems","The four laws of habit","Build: make it obvious, attractive, easy, satisfying. Break: make it invisible, unattractive, hard, unsatisfying. Every habit system I design \u2014 mine, my team's, my prompts' adoption \u2014 runs on these four dials.","James Clear \u2014 Atomic Habits cheat sheet"),
+    mkc("Habits & Systems","Implementation intentions + stacking","\"I will [behavior] at [time] in [location]\" beats vague intent. And chain new habits to existing ones: \"After [current habit], I will [new habit].\" The trigger does the remembering so willpower doesn't have to.","James Clear"),
+    mkc("Habits & Systems","The 2-minute rule + environment design","Scale any new habit down until it takes two minutes to start. Then design the environment so the right choice is the easy one \u2014 visible cues for good habits, friction for bad. The room beats the resolution.","James Clear"),
+    mkc("Habits & Systems","One battle at a time","Don't fix your whole life at once \u2014 it's almost impossible and it's how people fail. List the destructive habits, then pick ONE and be a sniper about it. Sequential wins compound; parallel fights collapse.","Jason Kalambay \u2014 8-Step Blueprint"),
+    mkc("Habits & Systems","Replace, don't resist","You can't white-knuckle a vice all day \u2014 give the urge a replacement job. Then trap yourself: tell two people you respect, put stakes on it (\"if I fail, I pay you $X\"). Make quitting more expensive than continuing.","Jason Kalambay"),
+    mkc("Habits & Systems","See the punch coming","Fighters get knocked out by the punch they didn't see. Name every habit that's stealing from the goals \u2014 write the list, feel the cost. Awareness isn't victory, but nobody wins a fight they don't know they're in.","Jason Kalambay"),
+    mkc("Habits & Systems","Close the loop monthly","Monthly audit: update all financial numbers, reflect on spending, review last month's goals, set next month's tied to the bigger plan. Systems without a review cadence quietly rot.","Monthly Audit Checklist"),
+    mkc("Habits & Systems","The 1-page day","Each morning: today's top priorities, one thing to get excited about, a phrase to repeat under pressure, and who needs me on my A-game today. One page, five minutes, aims the whole day.","High Performance Planner"),
+    mkc("Lifting","My training style","High intensity, low volume, 4\u20135x/week. Progressive overload beats novelty. The last hard rep is where the growth lives \u2014 don't leave it in the tank.","Personal"),
+    mkc("Lifting","Two hard programming rules","At least two full rest days per week, and never more than two or three training days in a row. Growth happens between sessions \u2014 the recovery structure IS the program, not an interruption to it.","Jeremy Ethier \u2014 BWS programs"),
+    mkc("Lifting","How heavy: 2 honest reps in reserve","End working sets where you could TRULY do only 2 more reps. Could do 3+? Too light \u2014 add weight. Can't hit the bottom of the rep range? Too heavy. Then beat last cycle's weight when the split repeats.","Rogan Cheng / BWS"),
+    mkc("Lifting","Double progression","Work up to the top of the rep range (e.g., 3\u00d715) with clean form, then add a little weight and climb again. Slow and gradual on purpose \u2014 big jumps buy an early plateau and injury risk.","Jeremy Ethier \u2014 abs guide"),
+    mkc("Lifting","Not all exercises are equal","Some movements are great for almost everyone, some are a waste of time. Pick the best exercise per muscle: stable, easy to load progressively, full stretch under tension. Ruthlessly cut the mediocre ones.","Jeff Nippard \u2014 The Muscle Ladder"),
+    mkc("Lifting","The warm-up template","Optional 5 minutes light cardio (especially after a desk day), then 5 minutes dynamic stretching for the half of the body being trained \u2014 arm circles, band pull-aparts, external rotations up top; leg swings below.","Jeremy Ethier \u2014 BWS"),
+    mkc("Lifting","The daily mobility five","Cat cow (60s), world's greatest stretch (30s/side), Asian squat (30s hold + 30s rocking), half-kneeling thoracic rotations (30s), wall slides (60s). Five minutes daily unlocks lifts and undoes the desk.","Jeremy Ethier \u2014 mobility routine"),
+    mkc("Lifting","Tendon pain: rest makes it worse","Tendons adapt to load; total rest deconditions them and the pain returns worse. Reduce the load and modify the movement \u2014 don't remove loading entirely. Manage it, don't hide from it.","Built With Science"),
+    mkc("Lifting","Supplements that earn a spot","Creatine monohydrate, protein powder, fish oil, a multivitamin. That's the science-backed list. Everything else is marketing until training, sleep, and diet are already dialed.","Real Science supplement plan"),
+    mkc("Lifting","The dad-training reality","I don't have hours anymore \u2014 and I don't need them. The plan I'll actually repeat every week beats the optimal plan I'll skip. Consistency with a good program outruns perfection with an abandoned one.","Epic Dad Fit"),
+    mkc("Nutrition","Protein first","Hit protein before anything else. It anchors satiety and protects muscle in a cut. Track it \u2014 don't estimate it.","Personal"),
+    mkc("Nutrition","Name the phase","Recomp near maintenance (~2,450) builds slowly. Cut cycles (~1,950\u20132,100) strip fat. Pick the phase on purpose. Don't drift between them.","Personal plan"),
+    mkc("Nutrition","The simple math","Find maintenance, then +200 for a lean bulk or \u2212500 for a cut. Protein: ~2g per kg (0.8g per lb) of bodyweight. Track daily \u2014 without tracking you're guessing, and guessing drifts.","Lars Meidell / Real Science"),
+    mkc("Nutrition","The fast-food playbook","Every chain has >14g-protein, <370-calorie options \u2014 Egg McMuffin is 300 cal / 17g protein. A rough day doesn't have to become a blown day. Know the plays before you're hungry in the drive-thru.","Nicko Dumodaug \u2014 Fast Food Guide"),
+    mkc("Nutrition","Fullness per calorie","High-fiber, high-volume, lean-protein foods are the cut's best weapon: legumes, oats, berries, chia and flax, pears, brussels sprouts, sweet potatoes. Eat big, stay in deficit, skip the hunger spiral.","Nicko Dumodaug \u2014 food list"),
+    mkc("Nutrition","The travel checklist","Before any trip decide: how am I getting there, how long, is there a kitchen? Pack protein snacks (jerky, bars, powder + shaker). Then on vacation \u2014 plan, relax, and enjoy the food. Stress costs more than a meal off plan.","Jeremy Ethier \u2014 BWS Travel Guide"),
+    mkc("Nutrition","5-minute protein snacks","Templates, not recipes: Greek yogurt + fruit, cottage cheese + fruit, blended protein ice cream (frozen fruit + whey + almond milk). Each lands 20g+ protein under ~300 calories. Keep the components stocked.","BWS High-Protein Snack Cookbook"),
+    mkc("Nutrition","Meal prep kills 21 decisions","Plan the week, shop once, prep in one block, freeze extras for the air fryer. You make the healthy choice one time instead of twenty-one times. Decision fatigue \u2014 not knowledge \u2014 is what breaks diets.","Zeats \u2014 Meal Prep Guide"),
+    mkc("Nutrition","Stock the default","Keep the house loaded with the staples: eggs, chicken, ground beef, salmon, Greek yogurt, rice, oats, sweet potato, spinach, berries, olive oil, nuts. When the kitchen is the environment design, the default meal is on-plan.","Lars Meidell \u2014 Top 20 Foods"),
+    mkc("Marriage","Boundaries vs. demands","A boundary controls what I do (\u201cI won\u2019t keep talking when I\u2019m yelled at\u201d); a demand tries to control what she does. Boundaries invite the relationship to grow; demands try to force it into something more comfortable and suffocate it. State mine and hold myself to them \u2014 don\u2019t issue orders for her.","Morgan Burch \u2014 Dare to be SEEN"),
+    mkc("Marriage","Blame points to the fear underneath","The bigger my anger and the more aggressive my blame, the deeper the fear or embarrassment I\u2019m protecting. \u201cI just need YOU to change\u201d is the tell. The SEEN method isn\u2019t suppressing the feeling \u2014 it\u2019s how I actually regulate it: name what I\u2019m scared or embarrassed about instead of firing it outward.","Morgan Burch"),
+    mkc("Marriage","The Love Account","Each of us carries an invisible account of how loved we feel right now \u2014 the sum of deposits and withdrawals. When it runs low we get reactive, defensive, easily sparked. Three jobs: make more small daily deposits, cut the withdrawals \u2014 the passive remarks (\u201cguess I\u2019ll wash your dish again\u201d), micro-criticisms, and unrepaired arguments that drain it faster than big gestures fill it \u2014 and actually accept her deposits with warmth instead of missing them.","Empowered Couples \u2014 Family Meeting Guide"),
+    mkc("Marriage","Check in on three timescales","Weekly: repair anything unresolved, sync the schedule, and ask \u2014 what made you feel most connected this week? what felt hard? what can I do to support you? (listen without fixing, end positive). Quarterly: each rate satisfaction in the core areas so quiet dissatisfaction gets voiced. Yearly: revisit vision, goals, and values. Great teams huddle \u2014 schedule it, don\u2019t wing it.","Empowered Couples + Libido Fairy"),
+    mkc("Marriage","67% of couple problems are perpetual","Most recurring issues never fully resolve \u2014 they\u2019re rooted in personality and values, not solvable bugs. The real question isn\u2019t \u201chow do we fix this\u201d but \u201ccan I live with this if it never changes?\u201d Move perpetual problems from combat to dialogue; stop trying to win them.","Couples Playground \u2014 Communication Workbook"),
+    mkc("Marriage","Four transitional points a day","Waking up, leaving the house, coming home, going to bed \u2014 these four moments set the emotional tone, and we\u2019re most open to change at transitions. A positive goodbye and a real greeting at the door move the whole day. Small changes at the hinges produce big results.","Couples Playground \u2014 52 Challenges"),
+    mkc("Marriage","The simple daily check-in \u2014 5 questions","How was today? How are you feeling right now? One thing you\u2019re grateful for? One small thing that would feel good tomorrow? How can I be a better partner to you tomorrow? Five minutes, scheduled, door closed \u2014 and when she answers, listen and validate, don\u2019t problem-solve.","Vanessa & Xander \u2014 Simple Daily Check-In"),
+    mkc("Marriage","Talk about the good stuff first","Most couples only talk about sex when something\u2019s wrong, which makes the whole topic feel like a problem. Reverse it: open with a compliment about attraction, then a positively-rooted question (\u201cwhat\u2019s your favorite memory with me?\u201d), then praise afterward. Build comfort on the good before ever raising a complaint.","Vanessa & Xander \u2014 How to Talk About Sex"),
+    mkc("Marriage","Spontaneous vs. responsive desire","Spontaneous drive: mental desire comes first, arousal follows. Responsive drive: arousal comes first, then the desire shows up \u2014 often only once things are already underway. Roughly 75% of men run spontaneous, ~30% of women responsive. Neither is broken; a responsive partner isn\u2019t \u201cnot interested,\u201d she just needs the on-ramp before the wanting arrives.","Vanessa Marin \u2014 Sex Drive Type"),
+    mkc("Marriage","Initiation has a style","People initiate and want to be initiated in different ways: Excite Me (build a simmer, tease), Take Care of Me (choreplay, carry the load first), Play With Me (make me laugh, inside jokes), Desire Me (show me you want me), Connect With Me (emotional closeness first), Touch Me (physical first, not verbal). Learn Megan\u2019s, lead with it \u2014 and know mine.","Vanessa & Xander \u2014 Art of Initiation"),
+    mkc("Marriage","What she actually wants in bed","Not a performance. Four things: take your time and tease, focus on her pleasure, mix it up (most women don\u2019t orgasm from intercourse alone \u2014 clitoral stimulation matters), and stay connected \u2014 eye contact, laughing, presence. Connection matters more than technique; the more connected she feels, the less the mechanics matter.","Vanessa & Xander \u2014 What Women Want"),
+    mkc("Marriage","Whoever has lower desire initiates sometimes","Default scripts leave one person always initiating and the other always gatekeeping \u2014 which quietly builds resentment on both sides. Deliberately let the lower-desire partner initiate in a fun way sometimes. It resets the power balance and takes the pressure off the higher-desire partner to always ask.","Ultimate Intimacy \u2014 challenge"),
+    mkc("Marriage","Declutter the home to lower the noise","Simplified spaces are easier to manage, which means more rest and more focus on what matters \u2014 fewer environmental withdrawals on everyone\u2019s nervous system. A calmer home is quietly a marriage and parenting intervention, not just tidiness.","30 Days to a Home That Heals"),
+
+    mkc("Marriage","Repair the rupture, not just the topic","Every couple fights; the ones who last are the ones who repair. After it cools, go back: name my part first without a \u201cbut,\u201d name the impact (\u201cthat left you feeling dismissed\u201d), and reconnect physically before re-litigating facts. The repair attempt matters more than who was right \u2014 it\u2019s the strongest predictor of a marriage that survives.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","The Four Horsemen","Watch for the four patterns that predict divorce: criticism (attacking her character, not the behavior), contempt (eye-rolls, sarcasm, superiority \u2014 the single deadliest one), defensiveness (counter-attacking instead of hearing), and stonewalling (shutting down and going silent). Contempt is the one to hunt and kill on sight. The antidote to all four starts with me, not her.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","Flooded means stop \u2014 same as the kids","When my heart\u2019s pounding and I\u2019m seeing red, my prefrontal cortex is offline \u2014 the exact amygdala hijack I know from the girls. I literally can\u2019t hear her or think straight past ~100 bpm. Call it: \u201cI need 20 minutes, I\u2019m not leaving, I\u2019m coming back.\u201d Then actually self-soothe (don\u2019t rehearse my case). Come back when regulated. Pushing through flooded only does damage.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","Complaint, not criticism","\u201cYou never help\u201d / \u201cyou always\u2026\u201d attacks her character and guarantees defensiveness. Instead: \u201cWhen X happened, I felt Y, and I need Z.\u201d Specific behavior, my feeling, a clear ask \u2014 no \u201calways,\u201d no \u201cnever,\u201d no verdict on who she is. Same content, opposite outcome.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","Turn toward the small bids","All day she makes tiny bids for connection \u2014 a comment about her day, a \u201clook at this,\u201d a sigh. Turning toward them (a real response, eye contact) instead of away (grunt, phone, \u201cmhm\u201d) is what quietly builds or drains the account. Masters of marriage catch the bids; the drift is just missed bids stacking up.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","The 5-to-1 ratio","In conflict, stable couples run about five positive interactions for every negative one \u2014 and closer to 20-to-1 in ordinary life. One sharp remark needs several warm ones to offset it. I don\u2019t have to be perfect in a fight; I have to keep the ratio positive. Repair, humor, affection, agreement all count.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","Assume the most generous story","Once resentment sets in, I read neutral acts as hostile \u2014 she forgot the milk \u201con purpose,\u201d the short reply \u201cmeans something.\u201d That\u2019s negative sentiment override, and it manufactures fights out of nothing. Default to the most generous plausible reading of what she did. Ask before I assume.","Gottman \u2014 counselor addition"),
+    mkc("Marriage","Accelerators and brakes","Desire isn\u2019t just a gas pedal \u2014 it\u2019s gas plus brakes. For most women the brakes matter more than the gas: stress, resentment, mental load, feeling unsafe, kids-might-wake, body image. \u201cNot in the mood\u201d usually means a brake is on, not that the gas is broken. The move is rarely more seduction \u2014 it\u2019s finding and lifting the brake.","Nagoski, Come As You Are \u2014 sex-therapist addition"),
+    mkc("Marriage","Her mental load is a brake \u2014 so service is foreplay","The invisible labor (planning, remembering, managing the kids) is one of the biggest desire-killers for mothers, and resentment about it is a brake that no amount of romance overrides. Megan\u2019s love language is acts of service for a reason: carrying the load without being asked doesn\u2019t just help \u2014 it removes the single biggest thing standing between her and wanting me.","Nagoski + Perel \u2014 sex-therapist addition"),
+    mkc("Marriage","The pursuer\u2013distancer trap","When one of us wants more sex and one wants less, the natural moves make it worse: the pursuer pushes (which adds pressure = a brake), the distancer withdraws (which reads as rejection). The cycle, not either person, is the problem. Break it by taking pressure off and rebuilding no-strings connection \u2014 not by pursuing harder.","sex-therapist addition"),
+    mkc("Marriage","Love wants closeness; desire wants space","The paradox of long marriage: love thrives on safety, familiarity, and predictability \u2014 and desire needs mystery, novelty, and a little distance. Total domesticity can quietly extinguish eroticism even in a great partnership. Deliberately create separateness and newness: see her as her own person, not just co-parent and roommate.","Esther Perel \u2014 sex-therapist addition"),
+    mkc("Marriage","Affection without an agenda","If every touch is a down payment on sex, the lower-desire partner starts flinching from all touch to avoid the transaction. Give a lot of warmth that goes nowhere on purpose \u2014 hugs, hands, a kiss that isn\u2019t a proposition. Safe, no-strings affection is what makes the pressure come off and desire have room to show up.","sex-therapist addition"),
+    mkc("Marriage","Scheduling isn\u2019t unromantic","For responsive desire and busy-parent reality, waiting to both spontaneously feel it is a losing bet. Planning it isn\u2019t clinical \u2014 it creates anticipation (a real accelerator) and guarantees the connection actually happens instead of getting crowded out. Put it on the calendar the way we protect anything that matters.","Nagoski \u2014 sex-therapist addition"),
+    mkc("Faith","Covenant, not contract","A contract is conditional and transactional \u2014 I\u2019ll hold up my end if you hold up yours. A covenant is unconditional and permanent \u2014 I\u2019m committed regardless. Marriage is covenant. When I catch myself keeping score or thinking \u201cif she would just\u2026,\u201d that\u2019s contract thinking creeping in. Lead with covenant even when I don\u2019t feel it.","Christian marriage framework"),
+    mkc("Faith","Love her sacrificially","Ephesians 5: love her as Christ loved the church \u2014 by laying himself down for her. Headship is servanthood, not authority; it means dying to my own comfort and preference first. The question isn\u2019t \u201cis she meeting my needs\u201d but \u201cam I laying myself down for hers.\u201d Marriage is a place I get discipled, not just a relationship I manage.","Ephesians 5 \u2014 faith addition"),
+
+    mkc("Parenting","Discipline means teach, not punish","The word means to teach. When a consequence doesn’t work, it’s usually rooted in fear — and fear is a terrible long-term teacher. Punishment freezes the behavior in the moment (fight/flight), then it comes right back. I’m not trying to make them sorry; I’m trying to teach the next behavior.","Big Little Feelings"),
+    mkc("Parenting","Related + immediate consequences","No dessert tonight for throwing a ball at the park fails twice: a young brain can’t connect an event five hours later, and there’s no logical link between the ball and the cookie. The consequence has to connect to the behavior and land close to it. No connection, no correction.","Big Little Feelings"),
+    mkc("Parenting","Tantrum vs. meltdown","A tantrum is behavioral — they still have access to the thinking brain, so hold the boundary calmly and flexibly (“not an option now, we can plan it for later”). A meltdown is the lower brain offline from overwhelm — no teaching gets through. Don’t try to fix it or reason; make it safe, say less, let it pass. Same map as my own flooding.","Courtney English"),
+    mkc("Parenting","PREP the transition","Most tantrums are transitions — the toddler brain hates surprise even for things that happen daily. PREP: Plan in advance, Reveal the plan, Explain the details (narrate what’s about to happen), and Put them in charge of one small thing (“blue jacket or purple?”). Warning the brain ahead of time prevents the threat response.","Big Little Feelings"),
+    mkc("Parenting","Give positive power with a choice","A lot of defiance is a bid for control. Instead of fighting it, hand over a small, bounded choice: “bed now — monkey or bear?” I make the big decision (that it’s bedtime); she makes the little one. Meets the need for power without surrendering the boundary.","Big Little Feelings"),
+    mkc("Parenting","Mediator, not judge","In a sibling fight I don’t need the truth and I don’t rule. Get between them, pause, listen to each side, no pain too small, reflect it back (“you wanted the marker, he grabbed it”), empathy to both, then “any ideas how to fix it?” Being the judge robs them of the skill and makes one kid the winner. Stay neutral — throw water on the fire, not fuel.","Heartstring — Sibling Fight Guide"),
+    mkc("Parenting","Strong-willed: the mistakes that backfire","With a strong-willed kid, the usual moves make it worse: hurrying and coercion (the frantic-morning spiral), and lecturing in the heat of anger. She isn’t broken and I’m not failing — strong will needs a different approach: fewer battles, more autonomy inside firm limits, and teaching only after everyone’s calm.","Center of Psych — Strong-Willed"),
+    mkc("Parenting","Give the instruction once","Decide the consequence before I speak. Then give one clear, concise instruction in a normal voice — no lecture, no hidden criticism. If she doesn’t respond, I act on the consequence instead of repeating myself. Repeating and re-appealing teaches her that my words are optional until I yell.","Center of Psych — Checklist Bundle"),
+    mkc("Parenting","Don’t take the autonomy bait","“I’ll do it myself!” and “you don’t care about me!” are bids for independence and leverage, not real accusations. Don’t argue or withdraw the request. Affirm and hold: “I care about you, and this still needs to happen.” Then feed the autonomy with a choice. Staying unshaken teaches the tactic doesn’t work.","Center of Psych — Reaching Agreements"),
+    mkc("Parenting","Address the heart, then reconnect","Behavior is a symptom of what’s going on inside. When I correct, get to the root — was it fear, selfishness, feeling unseen? Then close the loop with real repair: name my part if I had one, forgive, restore. Our faith frame: obedience taught with love, not anger, and the relationship put back together every time.","Rebecca Grant — You Choose Chart"),
+    mkc("Parenting","Catch the good with a token economy","For a stretch where I’m only noticing misbehavior, a simple token system flips it: earn a token for the good I catch (respect, starting a chore unprompted, independent play), spend tokens on real rewards. It forces me to hunt for what’s going right instead of only reacting to what’s wrong.","Center of Psych — Reserve of Happiness"),
+    mkc("Parenting","The Division of Responsibility","The master rule for feeding: I decide what, when, and where; she decides whether and how much. That’s the whole boundary. When I cross it — pushing bites, negotiating amounts — she pushes back and eats worse. Do my job, trust her to do hers. This is the foundation the rest of feeding sits on.","Ellyn Satter — sDOR"),
+    mkc("Parenting","Food play: look → touch → smell → taste","A scared eater can’t jump to tasting. Move through stages: looking at the food, touching it, smelling/getting closer, then licking and tasting. Invite, never force — pressure re-triggers the fear. Any low-pressure interaction counts as exposure. For Emilia this is the on-ramp that meal-table pressure skips.","Better Bites — Food Play Plan"),
+    mkc("Parenting","How I talk about food matters more than the plate","The goal isn’t broccoli tonight — it’s an adventurous eater for life. So I don’t pressure, bribe, or praise eating (“good job, two bites!” is still pressure), and I don’t become a short-order cook. Keep meal talk light and off the food. A positive table beats a cleaned plate every time.","Nutrition for Littles"),
+    mkc("Parenting","Serve family-style, stay authoritative","Put the food in shared dishes and let her serve herself: “this is what we’re having, you can take as much as you want.” That’s the authoritative lane — high expectations plus high sensitivity, leadership with autonomy. Not authoritarian (clean your plate) and not permissive (what do you want instead?).","Family Style — Jennifer Harris RDN"),
+    mkc("Parenting","Structure the eating windows","Grazing all day means never hungry enough for a real meal. Set 3 meals + 1–3 snacks at roughly the same times, water only in between. Predictable hunger and predictable structure cut the mealtime battles more than anything on the plate does.","Ellyn Satter / Nutrition for Littles"),
+    mkc("Parenting","Play is the work of childhood","Play is her language — it’s how she processes worries, learns, and feels connected to me. Commit to ~10 minutes of real play a day (all at once or in micro-moments). And when I need cooperation, reach for play first: make the shoe “talk,” sing it, turn it into a challenge. It’s hard for a kid to refuse an invitation to play.","Heartstring — Parenting Playbook"),
+    mkc("Parenting","Independent play is a skill I build","It’s not automatic — I build it. Declutter and rotate toys, set up a safe yes-space, then start small and stay close, and crucially don’t interrupt or direct when she’s absorbed. Every time I narrate or “improve” her play, I interrupt the muscle she’s growing. My job is presence, not participation.","Andrea Brambila — 10 Days to Independent Play"),
+    mkc("Parenting","Less out means more play","Rotate toys — keep 6–10 out, store the rest, swap every 1–4 weeks. Too many options overwhelm a kid the same way they overwhelm me, and an overwhelmed kid bounces instead of playing deep. Fewer, fresher toys = longer, richer independent play. Costs nothing but a bin.","Andrea Brambila — Toy Rotation"),
+    mkc("Parenting","Low-stim beats high-stim screens","Fast cuts, flashing color, and loud effects overload a developing nervous system — it’s like trying to focus in a room with strobe lights. Low-stim shows (slower pace, calm narration) leave her more regulated afterward. If there’s screen time, the content matters as much as the clock. AAP: about an hour a day at her age.","Cara / Kaytie Milliken — Screen guides"),
+    mkc("Parenting","Connection play — and skip the tickling","Laughter releases oxytocin and resets a rough day. Physical games where I’m the one “losing” or bumbling (taco-roll, knee-bounce, shake-out-the-sillies) empower her while connecting us. Avoid tickling as the tool — it takes away her control even when she’s laughing. I want laughter plus power, not laughter plus helplessness.","Heartstring / Nurtured First"),
+    mkc("Parenting","“Doing life” beats kid-centric activities","Kid-centric outings (splash pad, sensory bins) often drain me and overstimulate them. What she actually wants is to do life with me — Home Depot, baking, picking up sticks, washing the car. Those fill both our cups instead of just taking from mine. Presence through ordinary tasks, not a produced event.","Present Parent — Doing Life"),
+    mkc("Parenting","Kids must be taught to calm","Sending her to her room to “calm down” assumes a skill she doesn’t have yet. Calming is taught, not commanded. Practice breathing as play when she’s already calm — rainbow breaths, snake breaths, blowing bubbles — so the skill exists to reach for later. Design the capability in advance; don’t demand it mid-storm.","HIC — Breathing Exercises"),
+    mkc("Parenting","Co-regulation: I lend her my nervous system","A dysregulated kid borrows calm from a regulated adult. So the work is my body first — unclench, slow my breath, say less, model the calm without instructing her to breathe. Her system reads mine and shifts from fight-or-flight toward settle. I can’t talk her down; I can only bring her down with my own steadiness.","Courtney English — Emotional Regulation"),
+    mkc("Parenting","Know each kid’s sensory threshold","Every child has a different-size cup per sense. Low threshold = small cup, overwhelmed fast (loud rooms, tags, textures). Seeker = big cup with a hole, always craving input (crashing, spinning). Knowing each daughter’s profile tells me what triggers the dysregulation and what input actually calms her.","Courtney English — Sensory Profiles"),
+    mkc("Parenting","Heavy work is calming","The kid who hangs, leans, climbs, and crashes into everything is self-medicating — proprioceptive input (pushing, pulling, carrying, squeezing) organizes and calms the nervous system. So give it on purpose: carry the groceries, push the laundry basket, animal walks, wall pushes, a crash pad. Movement before I need her regulated, not after.","Courtney English — Heavy Work"),
+    mkc("Parenting","The bedtime regulation flow","Order the wind-down to actually work with her body: Connection (a little rough-and-tumble or a song) → Movement (rhythmic, predictable — blanket pulls, rocking) → Organizing/Calming (heavy work — bear hugs, kid-sandwich, tug-of-war) → Transition (lights low, books, snuggles, same closing line). Heavy work before bed, not screens.","Courtney English — Bedtime Routine"),
+    mkc("Parenting","Reading readiness is developmental, not age","Ready to read isn’t a birthday — it’s building blocks in order: pre-reading skills, letter sounds, phonemic awareness, blending, then reading. Push too early and I manufacture frustration; wait too long and I miss the interest. Watch for the signs (rhyming, pretend-reading, noticing letters), then start.","Montessori by June — Reading Readiness"),
+    mkc("Parenting","LEAD her into reading","Four levers: Language (audiobooks, read to her, discuss it — build background knowledge), Engagement (books she actually cares about, so there’s a why), Affirmation (“you’re a reader who’s learning” — belief matters), and Decoding (systematic phonics, books she can actually read, sit beside her). Meaning and motivation, not just sounding out.","LEAD reading framework"),
+    mkc("Parenting","Cue cards + chaining for routines","For a routine she resists, make it visual and let her finish it. Put a picture checklist right where she needs it (shoes by the door). Use chaining: I do all the steps but the last one and let her complete it, then hand her the last two, and so on backward until she owns the whole routine. Praise progress, not perfection.","Lauren Cantrell — Cue Cards"),
+    mkc("Parenting","Highly sensitive kids: be the safe space","Roughly 15–20% of kids are highly sensitive — Emilia’s anxiety profile fits. The rules flip: never punish the sensitivity, be the safe space instead of the threat, over-communicate and over-prepare her, invite don’t insist, and find the silver lining in the trait. Consequences work less well on these kids than safety and preparation do.","Jon Fogel — Highly Sensitive Kids Workshop"),
+    mkc("Parenting","The conditional yes","Instead of a flat no that trips the alarm, give a yes with a condition attached: “yes — as soon as shoes are on,” “yes, after dinner.” Same boundary, but her brain hears yes and the fight drains out of it. And when a question’s been asked and answered, I don’t re-argue it.","Jon Fogel — SMALL Brain Hacks"),
+    mkc("Parenting","Hitting has a reason — and a three-part fix","At this age the theory-of-mind wiring isn’t built — she doesn’t fully grasp the other kid’s pain yet, so consequences alone won’t do it. The fix is three parts: gentle-hands redirect in the moment, calm conversations about it later, and actual practice — not just punishment. Teach the skill that’s missing.","Jon Fogel"),
+    mkc("Parenting","Obedience is a bad ultimate goal","A kid who obeys any adult instantly and without question isn’t safe — they’re trainable by the wrong people. I don’t want blind compliance; I want cooperation plus a thinking kid who can eventually push back for good reasons. My discipline flow serves the relationship and the skill, not obedience for its own sake.","Jon Fogel"),
+    mkc("Parenting","Kids do well if they can","The reframe under everything: misbehavior is usually a lagging skill or an unmet need, not defiance — it’s can’t, not won’t. When she’s melting down or stuck, ask “what skill is missing here?” instead of “how do I make her comply?” Solve for the gap and the behavior follows.","Jon Fogel / Ross Greene"),
+    mkc("Parenting","The repair matters more than the rupture","I will lose my cool sometimes. What the girls actually learn from is the repair afterward — me owning it, no “but you…,” naming the impact, reconnecting. A rupture followed by repair builds more security than never rupturing. It also models the accountability I want them to have. Same move I use with Megan.","Jon Fogel — Failure-Relationship Paradox"),
+
+    mkc("Lifting","Tempo: own the eccentric","Lower under control (2–3 seconds), then drive the concentric as fast as clean form allows. The lowering phase is where a lot of the growth stimulus lives — dropping the weight fast throws away free reps. Control down, explode up.","Real Science / Nippard tempo notation"),
+    mkc("Lifting","The three levers trade off","Volume, intensity, and frequency are the dials — and pushing one means easing another. I run high intensity and low volume, so my intensity is near-max and my per-session volume stays low on purpose. More of everything isn’t the goal; the right balance I can recover from is. Adding volume means I’d have to back off intensity or frequency.","Geoffrey Schofield — SWEAT!"),
+    mkc("Lifting","Stay on a lift long enough to beat it","Swapping exercises every week feels productive but flattens the progression curve — the muscle never gets to adapt to the same movement twice. Pick the movement, then live on it for a block and chase the numbers up. Novelty is the enemy of overload.","Jeff Nippard"),
+    mkc("Lifting","Take failure selectively","Not every set to the bone. Isolation and machine work can go to true failure safely — that’s where the last-rep stimulus is cheap. Heavy compounds (squat, bench, deadlift) I leave 1–2 in reserve; failure there buys form breakdown and injury, not gains. Match proximity-to-failure to the risk of the lift.","Nippard — LSTF / Real Science"),
+    mkc("Lifting","The logbook is the program","Progressive overload isn’t a vibe — it’s a number I have to beat. Write down weight and reps every set, every session, and walk in aiming to top last time on something. If I’m not recording it, I’m not progressing it, I’m just working out.","Real Science — Workout Plan"),
+    mkc("Lifting","Stimulus-to-fatigue ratio","Some movements give a lot of muscle stimulus for little systemic fatigue and joint cost; others wreck me for a mediocre return. Running low volume, I can’t afford junk fatigue — every exercise has to earn its spot on stimulus-to-fatigue, not ego. High reward, low wreckage.","Schofield — SWEAT! (risk vs reward)"),
+    mkc("Lifting","Mind-muscle connection","Especially on isolation work, feeling the target muscle do the work beats moving the weight any way possible. Slow down, shorten the range if I have to, and actually contract the muscle I’m training. Moving weight isn’t the same as training the muscle.","Jeremy Ethier / Nippard"),
+    mkc("Lifting","Hit each muscle about twice a week","For growth, frequency of roughly 2x per muscle per week tends to beat blasting it once — more chances to accumulate quality volume and trigger protein synthesis. My split should have each muscle coming back around every 3–4 days, not once a week.","Schofield — SWEAT! / Nippard"),
+    mkc("Lifting","Train the core as an anti-mover too","Abs aren’t just crunches. The rectus flexes (crunches, leg raises), but the transverse and obliques resist movement — planks and Pallof presses train the anti-extension and anti-rotation that actually stabilize my spine under load. And abs progressive-overload like any muscle: add reps, then weight.","Nicko Dumadaug — Core Guide"),
+    mkc("Lifting","Sleep is a training variable","Recovery isn’t the absence of training — it’s where the adaptation happens, and sleep is the biggest lever in it. Under-sleeping blunts recovery, strength, and hunger control at the same time. Protecting sleep is protecting my gains, not competing with them. Same fight I already know matters.","CBUM — STNDRD / general"),
+    mkc("Lifting","Ramp into the first working set","Before the first heavy compound, pyramid up — something like 50% x for a few, 70% for a couple, 90% for one — to prime the pattern and the nervous system without adding fatigue. These feeder sets aren’t working sets; keep them easy. Warm the movement, don’t tax it.","Real Science / Ethier"),
+
+    mkc("Nutrition","Bulk at the right speed","A lean bulk means gaining about 0.5–0.75 lb per week — fast enough to add muscle, slow enough to keep fat off. Gaining much less means I’m leaving muscle on the table; much more means I’m just getting fat and will pay for it in the next cut. Aim for the slow climb, not the fast one.","Real Science — Nutrition Plan"),
+    mkc("Nutrition","Adjust to the scale","Every calorie target is an estimate, including mine. The real program is the weekly trend: if the scale isn’t moving the direction the phase wants, nudge intake ~150 cal and reassess. Set the number, watch the trend, adjust. Don’t marry the starting number.","Real Science — Nutrition Plan"),
+    mkc("Nutrition","No magic macro split","Once calories and protein are set, the carb-to-fat ratio is mostly preference — there’s no ratio that magically outperforms another. Stop optimizing the split and hit the two things that matter: total calories for the phase, and the protein floor. Simpler is more sustainable.","Real Science — Nutrition Plan"),
+    mkc("Nutrition","80/20, not all-or-nothing","Build 80–90% of intake from whole foods for the fiber and micros; the remaining 10–20% can be whatever I want and it won’t hurt results if calories still fit. This is what makes it survivable long-term and what lets me eat with Megan and the girls without it being a production. Adherence beats purity.","Real Science / Epic Dad Fit"),
+    mkc("Nutrition","Spread protein across the day","Muscle protein synthesis responds better to several protein feedings than one big hit — aim for 3+ doses of ~25–40g through the day rather than backloading it all at dinner. Same daily total, better use of it. Anchor each meal with a protein.","Real Science — Nutrition Plan"),
+    mkc("Nutrition","Don’t crash dietary fat","Fat isn’t just calories — it’s raw material for testosterone and other hormones. Dropping it too low on an aggressive cut tanks hormones, mood, and recovery. Keep a fat floor even when slashing calories; pull more from carbs than from fat once fat is at a reasonable minimum.","Nicko — Natural Testosterone Guide"),
+    mkc("Nutrition","The natural testosterone levers","Protecting T at my age isn’t a supplement — it’s the fundamentals stacked: 7–9 hours of sleep, managed stress (chronic cortisol suppresses it), heavy compound lifting, staying out of high body-fat ranges, and enough healthy fats, zinc, and vitamin D. The same habits I’m already chasing, pointed at hormones.","Nicko — Natural Testosterone Guide"),
+    mkc("Nutrition","Steps are a fat-loss lever","Walking is underrated cardio — a solid daily step count burns real calories without eating into lifting recovery the way hard cardio can. On a cut, my step count is a dial I can turn instead of cutting food further. Protect the daily walk; it’s doing more than it looks.","Lars Meidell — Top 20 Foods"),
+    mkc("Nutrition","Hunger is manageable, not just endured","On a cut, beyond volume foods, the non-food levers matter: hydrate well, protect sleep (short sleep spikes hunger), use black coffee to blunt appetite, and keep protein high for satiety. Hunger is a signal to manage with tools, not a test of willpower to white-knuckle.","Lars Meidell / Nicko"),
+    mkc("Nutrition","Budget alcohol on purpose","Alcohol is empty calories that also blunt recovery and testosterone and quietly loosen every food decision after the second drink. It’s not off-limits, but it isn’t free — decide before I’m out whether it fits the phase, the way I worked out for San Diego. Choose it, don’t default into it.","Nicko — Natural Testosterone Guide"),
+
+    mkc("Leadership","Adversity is a terrible thing to waste","I can’t control what hits the team or me — only how I respond and what I pull from it. Treat every setback as raw material for growth instead of something to just survive. The response is the part I own.","Will Guidara via CGLP"),
+    mkc("Leadership","Empower, don’t script","Guidara made his team memorize speeches for a new menu — and the whole experience went stale and got panned. Give people the what and the why, then let them execute in their own voice. Over-controlling the how kills the spark that made them worth hiring.","Will Guidara via CGLP"),
+    mkc("Leadership","Control or growth — not both","If every idea has to run through me, I’m the bottleneck and the team stops bringing their best. Let them run ideas that fit our values even when they aren’t how I’d do it. A good idea with full buy-in beats a great idea with minimal buy-in.","Will Guidara via CGLP"),
+    mkc("Leadership","Interview like a first date","Drop the interrogation checklist. Look for three things: integrity, a real work ethic, and whether they’ll get along with the people already here. Then let new hires catch the culture behind the scenes before I put them on the front line.","Will Guidara via CGLP"),
+    mkc("Leadership","The five rules of feedback","Criticize the behavior, not the person. In private, never in public. Never emotional. Consistently. And always lead with a charitable assumption. One more: tell the team I’m raising the feedback bar before I start — raising it cold blindsides people.","Will Guidara via CGLP"),
+    mkc("Leadership","Watch the sunk-cost trap","The more I’ve poured into a project, a hire, or an approach, the harder it is to walk away — even when it’s clearly not working. What it cost to get here is gone either way. Decide on what’s true now, not on what I’ve already sunk into it.","50 Rules for Succeeding in Life"),
+
+    mkc("Habits & Systems","Engineer for flow","McKinsey found people are up to 5x more effective in flow — yet most spend under 5% of work in it. Flow isn’t luck; it’s built from Time, Energy, Mentality, Proficiency, Organization (TEMPO). Protect a real block, kill interruptions, and let one hard thing absorb me fully.","Ben Meer — 75 Productivity Hacks"),
+    mkc("Habits & Systems","Manage energy, not just time","A full calendar isn’t the same as a productive one. Time is fixed; energy is the variable I actually control — guard sleep, take real breaks, and put the hardest work where my energy peaks, not just where there’s a free slot. Match the task to the tank.","Ben Meer — 75 Productivity Hacks"),
+    mkc("Habits & Systems","Never miss twice","Missing once is an accident; missing twice is the start of a new habit — the wrong one. The rule isn’t perfection, it’s the fast return. Whatever slipped — the workout, the writing, the check-in — the only thing that matters is showing up for the very next rep.","James Clear — Atomic Habits"),
+    mkc("Habits & Systems","Own the career review","Once a month, run the career pass: list my top 3–5 wins, save every piece of feedback I got, check last month’s goals against what I actually did, and set 2–3 new ones across role, development, and income. Nobody manages my growth for me — the cadence does.","Monthly Audit Checklist"),
+
+    mkc("Parenting","“She’s only five”","When non-compliance or whining spikes my irritation, the reset is one line: she’s only five. She’s still a child, and acting like one is age-appropriate, not defiance aimed at me. Recalibrating the expectation to her actual developmental age drains most of the charge out of the trigger.","All Pro Dad — 30 Day Challenge"),
+    mkc("Parenting","Father with the end in mind","Picture Emilia and Olivia at 25 — the women I hope they become — and parent today with that in view. Then the sobering math: I can actually count the weekends left before they leave home. Presence isn’t infinite. The evening I trade away to a screen is subtracted from a fixed total.","All Pro Dad — 30 Day Challenge"),
+    mkc("Faith","The rule is a trellis, not a cage","“Rule” of life sounds like legalism, but the root word meant trellis — the structure that lifts a vine so it bears the most fruit. My rhythms aren’t rules to pass or fail; they’re the support that frees me to abide. If a practice starts constricting instead of freeing, I revise it. Review the whole thing each season.","Practicing the Way — Rule of Life"),
+    mkc("Faith","The seven practices","The core disciplines a rule of life is built from: silence & solitude, Scripture, prayer, fasting, simplicity, Sabbath, and community. I don’t need all seven firing at once — pick the one or two this season actually needs and work them into the daily and weekly rhythm.","Practicing the Way — Rule of Life"),
+    mkc("Faith","Be the warrior my family needs","Five kinds of men: the Whiner stuck in his past, the Worrier afraid of the future, the Waiter hoping to be rescued, the Wounded suffering in silence — and the Warrior, who fights for his marriage and kids and cares more about legacy and character than his circumstances. Every morning I get to choose which one I’m going to be.","All Pro Dad — How to Be the Man"),
+    mkc("Faith","Manhood isn’t the résumé","The pull is to measure myself by title, income, degrees — to prove I’m a man by out-achieving. But manhood isn’t how much I know or earn; it’s how much I grow in wisdom and how I show up for the people I’m responsible for. Character over credentials, every time.","All Pro Dad — How to Be the Man"),
+
+    mkc("Leadership","Don’t shrink in the senior room","I can lead my own team with total confidence and still go quiet the moment I’m in the room with execs — letting the loudest voice win and swallowing the point I came in to make. That costs more than my confidence; worse decisions get made when I don’t take up my space. Ground myself before the high-stakes room and walk in already standing in it.","Revive & Thrive — managing up"),
+    mkc("Leadership","Workhorses get more work, not promoted","Being the most dependable person — the one who catches every dropped ball and works the weekend — can quietly trap me. I become indispensable to the team I’m in, so no one dares move me. Leaders who rise build the people and systems that run without them, and look up and out to become a trusted advisor to their boss. Promotion comes from proving my team succeeds when I’m not in the room.","Your CEO Mentor"),
+    mkc("Leadership","Peer influence is earned, not charmed","Getting peers who don’t report to me to actually listen isn’t about charm, and my title means nothing to them. Influence across the org is earned — through credibility, following through, and being useful to them before I need anything. Bank the trust long before I need to spend it.","Your CEO Mentor"),
+    mkc("Leadership","Lead in the grey","Real leadership calls rarely come in black and white — they’re a thousand shades of grey with no clean right answer. Waiting for certainty before I act is itself a decision, and usually a bad one. Make the best call I can with what I have, communicate the why, and adjust as it gets clearer.","Your CEO Mentor"),
+
+    mkc("Growth","The Frog Pond Effect","I judge myself by relative position — how I stack up against the people right around me — not by any absolute standard. My scoreboard is relative, not absolute. That’s why growth feels like destruction: to grow I have to leave the small pond where I’m a big frog for a bigger one where I’m the dumbest in the room. That ego hit isn’t failure — it’s the cost of entry. Pay it with pride.","Sahil Bloom — Curiosity Chronicle"),
+    mkc("Growth","The dichotomy of control","The core Stoic move: split everything into what’s up to me and what isn’t. My effort, my choices, my response — mine. Outcomes, other people, the past, what they think — not mine. Peace and power both come from pouring energy only into the first column and releasing my grip on the second.","Daily Stoic"),
+    mkc("Growth","The obstacle is the way","Marcus Aurelius: the impediment to action advances action; what stands in the way becomes the way. The thing blocking me isn’t separate from the path — it IS the path. Every obstacle is raw material for the exact virtue the moment calls for: patience, courage, creativity. Don’t wish it away; work it.","Daily Stoic"),
+    mkc("Growth","Excellence is a habit, not an act","Arete — excellence — isn’t something I summon on the big day. It’s the accumulation of how I do the small, boring, unwatched things, over and over. I don’t rise to the occasion; I fall to the level of my habits. Build the habit and the moment takes care of itself.","Daily Stoic"),
+    mkc("Growth","Time is the one thing I can’t earn back","The wealthy buy cars, homes, jewels — but no one can buy back an hour. Time is the only truly non-renewable resource I have, and I spend it like it’s infinite. Guard it the way I’d guard the most valuable thing I own, because it is. Who and what I give it to is the realest budget I keep.","Daily Stoic"),
+    mkc("Growth","I can decide to change","Seneca said we’re all slaves to something — food, phone, drink, ambition. But the chain isn’t fate. The same will that got captured can be turned. Change doesn’t start with a perfect plan; it starts with the decision, made now, that this is no longer who I am. Awareness plus a decision beats awareness alone.","Daily Stoic"),
+    mkc("Growth","Don’t defer the life I want","Memento mori isn’t morbid — it’s a forcing function. “Later” quietly assumes a supply of time I was never promised. The trip, the words to Megan, the thing I keep meaning to try — the honest question is why not now. Let death’s certainty make the living urgent instead of someday.","Daily Stoic"),
+    mkc("Growth","I’d probably be no different","It’s easy to judge someone’s cowardice or failure and think I’d have done it right. But put in their exact position — their fear, their pressure, their formation — I’d likely have done the same. That humility does two things: it softens my contempt for others and it kills the excuse that I’m the exception. Judge my own actions first.","Daily Stoic"),
+    mkc("Habits & Systems","Keep a decision journal","Before a real decision, write down the call, what I expect to happen, and why — then revisit it later. It separates decision quality from outcome luck (a good process can still get unlucky), kills hindsight bias, and over time shows me my actual patterns. Clearer thinking now, and something I can trust myself against later.","Ben Meer — System Sunday"),
+
+    mkc("Parenting","Why my kids lie","When I catch a lie and start interrogating — “did you lie to me?”, sharper voice, rapid-fire questions — the lesson isn’t honesty, it’s how to hide better next time. Kids mostly lie out of fear of my reaction. So I don’t ask a question I already know the answer to, and I don’t make telling the truth dangerous. Be safe enough that the truth feels possible.","The Considerate Momma"),
+    mkc("Parenting","Three sentences when a kid lies","Catch it: “I think something different happened. Can you help me understand?” — open a door, don’t accuse. When fear drove it: “I’m not going to get angry. I just need to know what actually happened.” — remove the threat before asking for truth. After the truth is out: “I can see you were worried about getting in trouble. That makes sense. And I still need honesty from you.” — the acknowledgment and the boundary in one breath.","The Considerate Momma"),
+    mkc("Parenting","Never break a promise to them","When Emilia reminds me I promised something — a sleepover, the park — and I’m tired and want to push it off, that’s the moment that matters. To me it’s a small reschedule; to her it’s whether my word means anything at all. Keep the promise, or don’t make it. Their trust in me is built one kept word at a time.","Rising Father"),
+    mkc("Parenting","Break the cycle, don’t repeat it","The scary moment is watching my own worst reaction climb out of my kid — or catching myself doing the exact thing I swore I never would. I’m not doomed to repeat how I was parented, but awareness alone doesn’t break the pattern. It takes new skills rehearsed for the hard moments, and repair when I slip. The chain breaks in me.","Peace and Parenting"),
+    mkc("Parenting","Watch the quiet one","The loud, melting-down kid gets all my attention. But the “good one,” the easy one, the mature one can be masking it — quietly learning to shrink her needs so she’s never a burden. I don’t mistake compliance for okay. Go looking for what a quiet Emilia or Olivia isn’t saying, and make sure being easy never becomes the price of my attention.","Peace and Parenting"),
+    mkc("Parenting","I’m the model they copy","If my kids lack patience or self-control, the honest first place to look is me. They absorb my worst habits faster than any lesson I try to teach — how I handle traffic, my phone, my temper. I can’t lecture my way out of what I model. Self-regulation isn’t separate from parenting; it is parenting.","Rising Father"),
+    mkc("Marriage","Stay openable after being hurt","I opened up to Megan once, it came back in the next argument, so a part of me decided: never again, stay surface-level. That quietly costs the whole connection — she can’t know a man who won’t be known. Walking in already expecting it to be used against me is defeat before I speak. Make the pre-decision that if it stings, it won’t drop me. And when I share a struggle, bring the plan too, not just the problem.","High Level Husband"),
+
+    mkc("Marriage","Keep my voice in the hard conversation","When Megan — or anyone — makes a conversation difficult, I don’t have to pick between exploding and going silent. I can stay calm and still hold my position. Someone else being hard to talk to doesn’t mean I lose my voice or turn into someone I’m not. Say it with control, and say it anyway.","Jefferson Fisher"),
+    mkc("Parenting","Be willing to be the bad guy","My job isn’t to be liked in the moment — it’s to raise them well. Some of the most loving answers are no, and a limit they need is worth their temporary anger. I don’t apologize for a boundary that’s good for them. Firm and kind aren’t opposites: hold the line, then reconnect.","All Pro Dad"),
+    mkc("Growth","Courage doesn’t feel like relief","After I finally say the hard thing, my body keeps replaying it and I feel worse, not lighter. That’s normal — doing the brave thing rarely feels like relief in the moment. The rattled, second-guessing feeling isn’t proof I got it wrong. Don’t undo a good decision just because it didn’t feel good.","Dr. Tracy D."),
+
+    mkc("Growth","Fixed vs growth mindset","A fixed mindset says ability is set, so every challenge is a test I can fail. A growth mindset says ability is built, so challenges are how I get better. Same event, opposite meaning. Catch myself treating a struggle as a verdict on who I am — and treat it as a rep instead.","Mindset — Carol Dweck"),
+    mkc("Growth","Praise the effort, not the talent","Telling my girls (or myself) “you’re so smart” makes them protect the label by avoiding risk. Praising the strategy, the effort, the choice to keep going builds kids who take on hard things. Reward the process, not the person.","Mindset — Carol Dweck"),
+    mkc("Growth","The power of “not yet”","“I can’t do this” becomes “I can’t do this yet.” One word turns a dead end into a stage in a process. When Emilia hits a wall — or I do — “not yet” keeps the door open and points at the next attempt instead of the failure.","Mindset — Carol Dweck"),
+    mkc("Growth","Grit = passion + perseverance","What predicts achievement over the long haul isn’t talent — it’s grit: holding the same top-level goal for years and not quitting when it’s boring or hard. Intensity is easy; the consistency of interest over time is what’s rare and decisive.","Grit — Angela Duckworth"),
+    mkc("Growth","Effort counts twice","Talent × effort = skill. Skill × effort = achievement. Effort shows up in both equations — it builds the skill AND turns skill into results. The person grinding usually beats the gifted one who coasts. Bet on effort.","Grit — Angela Duckworth"),
+    mkc("Growth","Go deep before chasing new","My all-or-nothing wiring loves starting things. Grit is the opposite muscle: going deeper on one thing for years instead of chasing the next shiny interest. Before starting something new, ask whether I’m building — or just fleeing boredom.","Grit — Angela Duckworth"),
+    mkc("Growth","Autonomy, mastery, purpose","For anything past rote work, carrots and sticks backfire. Real motivation runs on three things: autonomy (control over how I work), mastery (getting visibly better), and purpose (it connects to something bigger). Build my work and my team around those, not bribes and threats.","Drive — Daniel Pink"),
+    mkc("Growth","If-then rewards can backfire","Dangling a reward for creative work narrows focus and can kill the intrinsic interest that produced the good work. With my team: pay fairly, get money off the table, then drive with meaning and growth — not a bonus for every task.","Drive — Daniel Pink"),
+    mkc("Growth","Mastery is an asymptote","You get closer to mastery but never fully arrive — and that’s the point. The joy is in the pursuit, not a finish line. Lifting, leading, faith: fall in love with the practice; the gap that never fully closes is what keeps it alive.","Drive — Daniel Pink"),
+    mkc("Growth","Small choices compound","No dramatic moves — just small, smart choices, repeated, multiplied by time. Invisible for a while, then suddenly undeniable. The same math runs against me with small bad choices. Consistency on the little things is the whole game.","The Compound Effect — Darren Hardy"),
+    mkc("Growth","100% responsible","I own all of it — my choices, my reactions, my results. No blaming circumstances, my past, or anyone else. It’s a hard pill and a freeing one: if I’m the cause, I’m also the fix. Nothing changes until I take full ownership.","The Compound Effect — Darren Hardy"),
+    mkc("Growth","Track it to change it","Whatever I want to improve — spending, calories, time, temper — track it honestly for a week first. The awareness alone shifts behavior, because I can’t fix what I refuse to look at. Measure the thing I’ve been avoiding.","The Compound Effect — Darren Hardy"),
+    mkc("Growth","Say “I don’t know”","The three hardest words to say. Faking certainty blocks the question that leads to a real answer. Admitting ignorance is where figuring it out begins — with my team, my kids, my faith. Trade fake confidence for honest curiosity.","Think Like a Freak — Levitt & Dubner"),
+    mkc("Growth","Find the real incentive","People don’t do what they say; they do what they’re rewarded for. When behavior confuses me — an employee, a kid, myself — stop moralizing and ask what incentive is actually driving it. Change the incentive and the behavior follows.","Think Like a Freak — Levitt & Dubner"),
+    mkc("Growth","Redefine the problem","Most people attack the problem as first stated. Re-ask the question — the real bottleneck usually isn’t where everyone’s looking. Before I solve, make sure I’m solving the right problem.","Think Like a Freak — Levitt & Dubner"),
+    mkc("Growth","Introversion is a strength","Our culture worships the bold, fast, talkative “extrovert ideal,” but introverts bring deep focus, real listening, and thinking before speaking — and that’s a third to half of people. Not shyness to fix; a temperament to leverage.","Quiet — Susan Cain"),
+    mkc("Growth","Solitude fuels the best work","Constant collaboration and open rooms can drown the deep thinking that real breakthroughs need. Guard alone-time for focused work — the quiet is where the good stuff gets made. Protect it like a meeting.","Quiet — Susan Cain"),
+    mkc("Growth","Recharge in restorative niches","If I run introverted, people-heavy days drain a real battery, and I refill in solitude — not by pushing harder. Build in restorative niches: quiet mornings, a walk alone, a closed door. Manage the energy instead of white-knuckling it.","The Introvert Advantage — Marti Olsen Laney"),
+    mkc("Growth","Pain + reflection = progress","Painful experiences are the raw material of growth — but only if I stop and reflect instead of just reacting. Don’t waste a mistake or a hard season; mine it for the principle it’s trying to teach. Reflect, extract, adjust.","Principles — Ray Dalio"),
+    mkc("Growth","Be radically open-minded","My worst blind spots are the ones ego hides. Actively seek thoughtful people who disagree, weight their view by how credible they are on that topic, and stress-test my thinking against theirs. The goal is what’s true, not being right.","Principles — Ray Dalio"),
+    mkc("Growth","Write down your principles","When I face a decision, I’ve usually faced its “type” before. Capture how I want to handle each type as a written principle, and decisions become repeatable instead of reinvented under pressure. Build my own playbook.","Principles — Ray Dalio"),
+    mkc("Growth","Let them, then let me","When people show me who they are or make their choices — let them. I burn enormous energy trying to control what others do and think. “Let them” releases the grip; “let me” points me back to the one thing I control: my own response.","The Let Them Theory — Mel Robbins"),
+    mkc("Growth","Their opinion isn’t my burden","What other people think of me is mostly none of my business, and chasing approval hands them the wheel. Let them think what they’ll think; I steer by my values and the handful of people who actually matter.","The Let Them Theory — Mel Robbins"),
+    mkc("Habits & Systems","The habit loop","Every habit runs a loop: cue → routine → reward, with a craving powering it. Habits aren’t willpower failures; they’re grooves. To change one, first see the loop I’m actually running — including the reward the bad habit is quietly paying me.","The Power of Habit — Charles Duhigg"),
+    mkc("Habits & Systems","Keep the cue and reward, swap the routine","I can’t erase a habit, but I can redirect it: keep the same cue and same reward, change the routine in between. Bored at night (cue) wanting to unwind (reward) → swap “open a game” for a routine that still pays off.","The Power of Habit — Charles Duhigg"),
+    mkc("Habits & Systems","Keystone habits","Some habits quietly pull others into line — exercise, a made bed, a family dinner. Change one keystone habit and a cascade follows. Instead of fixing everything at once, find the one habit that drags the rest upward.","The Power of Habit — Charles Duhigg"),
+    mkc("Habits & Systems","Escape narrow framing","“Should I do this — yes or no?” is a trap; a whether-or-not decision means I’ve only found one option. Force a couple more (What else could I do? What would I tell a friend?). Widen the options before I pick.","Decisive — Chip & Dan Heath"),
+    mkc("Habits & Systems","Reality-test your assumptions","I gather info that confirms what I already want. Instead, hunt for disconfirming evidence, run a small experiment, or ask someone who’ll tell me I’m wrong. A quick pre-mortem — “it’s a year later and this failed, why?” — surfaces the truth cheaply.","Decisive — Chip & Dan Heath"),
+    mkc("Habits & Systems","10/10/10 for distance","Short-term emotion hijacks decisions. Ask: how will I feel about this in 10 minutes, 10 months, and 10 years? The gut-panic usually shrinks at the longer ranges, and the right call gets clearer once I zoom out.","Decisive — Chip & Dan Heath"),
+
+    mkc("Money","Buy assets, not liabilities","The core distinction: an asset puts money in my pocket, a liability takes it out. The rich buy income-producing assets; the middle class buys liabilities they think are assets (the bigger house, the nicer car). Every dollar is a little worker — spend it hiring more workers.","Rich Dad Poor Dad — Robert Kiyosaki"),
+    mkc("Money","Make money work for me","Working for money is the treadmill; the goal is to own assets that earn whether or not I show up. Financial freedom is when passive income covers my expenses. Build the machine that pays me, so my time stops being the only thing for sale.","Rich Dad Poor Dad — Robert Kiyosaki"),
+    mkc("Money","Financial literacy is the real education","It’s not how much I make, it’s how much I keep and how hard it works. Cash flow, assets, taxes, how money actually moves — that knowledge matters more than income. Fear and “playing it safe” keep smart people broke; learn the game and take intelligent risk.","Rich Dad Poor Dad — Robert Kiyosaki"),
+    mkc("Money","Automate the money","Willpower fails; systems don’t. Set automatic transfers on payday — to investments, savings, bills — so the right thing happens without a decision. Design the system once and let it run. What’s automated gets done.","I Will Teach You to Be Rich — Ramit Sethi"),
+    mkc("Money","Conscious spending","Spend extravagantly on the few things I truly love, and cut costs mercilessly on everything I don’t. Guilt-free spending isn’t the enemy — unexamined spending is. Decide what my money is FOR, then fund that on purpose.","I Will Teach You to Be Rich — Ramit Sethi"),
+    mkc("Money","Win the big wins","Agonizing over $3 lattes while ignoring the 5–10 big levers — savings rate, housing, salary, fees — is backwards. Get the handful of big decisions right and the small stuff barely matters. And a “rich life” is personal: define mine instead of copying anyone else’s.","I Will Teach You to Be Rich — Ramit Sethi"),
+    mkc("Leadership","The Law of the Lid","My leadership ability is the ceiling on my effectiveness. A team can only rise as high as the leader running it — raise my lid and I raise everything under it. To grow the org’s results, grow the leader first: me.","The 21 Irrefutable Laws — John Maxwell"),
+    mkc("Leadership","Leadership is influence","Not title, not position, not the org chart — leadership is influence, nothing more, nothing less. If no one’s following, I’m just taking a walk. Influence is earned through trust and track record, not granted by a badge.","The 21 Irrefutable Laws — John Maxwell"),
+    mkc("Leadership","Leadership develops daily","Leaders are made in small daily disciplines, not in a single event or promotion. What I do consistently — reading, reflecting, reps — compounds into capacity. Lead myself well every day and the growth accrues.","The 21 Irrefutable Laws — John Maxwell"),
+    mkc("Leadership","Your inner circle sets your ceiling","Those closest to me determine how far I go. Surround myself with people stronger than me in their lanes and my potential multiplies. Guard who’s in the room — they raise me or cap me.","The 21 Irrefutable Laws — John Maxwell"),
+    mkc("Leadership","Be a non-anxious presence","The most important thing I bring to a tense room isn’t answers — it’s my own calm. When everyone’s reactive, the leader who stays steady and self-regulated lowers the whole system’s anxiety. Manage my reactivity first; it’s contagious either way.","A Failure of Nerve — Edwin Friedman"),
+    mkc("Leadership","Stay differentiated","Lead from my own clear values instead of bending to whoever’s most upset. Staying connected to people WITHOUT absorbing their emotions or caving to pressure is the whole skill. Be my own person while staying in relationship.","A Failure of Nerve — Edwin Friedman"),
+    mkc("Leadership","Don’t let the most anxious set the pace","Systems organize around their most reactive, dependent, or demanding member. If I keep adapting to them, I hand them control. Lead toward strength and health, not toward whoever complains loudest.","A Failure of Nerve — Edwin Friedman"),
+    mkc("Leadership","Expect sabotage after real change","When I make a genuine change or hold a hard line, pushback isn’t proof I’m wrong — it’s the system trying to pull me back to normal. Staying steady THROUGH the resistance is what makes the change stick. Don’t cave at the sabotage.","A Failure of Nerve — Edwin Friedman"),
+    mkc("Leadership","Be proactive: work your circle of influence","Between what happens and how I respond is a gap — and my freedom lives there. Proactive people pour energy into what they can affect; reactive people burn out on what they can’t. Spend myself on the part I control.","The 7 Habits — Stephen Covey"),
+    mkc("Leadership","Begin with the end in mind","Start every effort with a clear picture of the destination. Write the ending first — the man, father, and leader I want to have been — and let it steer today’s choices. Make sure the ladder’s against the right wall before I climb fast.","The 7 Habits — Stephen Covey"),
+    mkc("Leadership","Put first things first","Important-but-not-urgent work — health, relationships, planning, growth — gets crowded out by urgent noise. Schedule that Quadrant II work first, on purpose, or it never happens. Don’t prioritize my schedule; schedule my priorities.","The 7 Habits — Stephen Covey"),
+    mkc("Leadership","Seek first to understand","Most people listen to reply, not to understand. Truly grasp the other person’s view before I push mine — with Megan, the girls, my team. Understanding first lowers defenses and earns me the right to be heard.","The 7 Habits — Stephen Covey"),
+    mkc("Leadership","Find your voice, help others find theirs","Beyond effectiveness is greatness: find my voice — where my talent, passion, need, and conscience meet — then inspire the people I lead to find theirs. Leadership is communicating others’ worth so clearly they come to see it in themselves.","The 8th Habit — Stephen Covey"),
+    mkc("Leadership","Don’t criticize, condemn, or complain","Criticism puts people on the defensive and rarely changes them — it just breeds resentment. Any fool can condemn; it takes character to understand and encourage instead. Lead with appreciation, not fault-finding.","How to Win Friends & Influence People — Dale Carnegie"),
+    mkc("Leadership","Give honest appreciation","The deepest human craving is to feel important. Sincere, specific appreciation — not flattery — is the cheapest powerful thing I can give. Catch people doing things right and say so, at work and at home.","How to Win Friends & Influence People — Dale Carnegie"),
+    mkc("Leadership","See it from their angle","To move anyone, first arouse in them an eager want — talk in terms of what THEY care about, not what I want. Seeing it from the other person’s point of view is the closest thing to a magic formula. Frame my ask in their interests.","How to Win Friends & Influence People — Dale Carnegie"),
+    mkc("Leadership","Be genuinely interested in others","I make more friends in two months by being interested in people than in two years trying to make them interested in me. Ask, listen, remember the details. Real curiosity about others is magnetic — and rare.","How to Win Friends & Influence People — Dale Carnegie"),
+    mkc("Leadership","Think 10x, not 10%","Incremental goals produce incremental effort. A target an order of magnitude bigger forces a different question — not “how do I work harder” but “what would have to be true?” — and usually a smarter, systemized answer. Let the bigger vision recruit the better strategy.","Ninefigure Mindset — Brandon Dawson"),
+    mkc("Habits & Systems","Get it out of your head","My mind is for having ideas, not holding them. Capture every open loop — task, idea, commitment — into one trusted system outside my head, so my brain stops nagging and starts thinking. Open loops drain focus until they’re written down.","Getting Things Done — David Allen"),
+    mkc("Habits & Systems","Define the next action","“Plan the trip” stalls; “text Megan possible dates” moves. Every open loop needs a concrete physical next action — the smallest real step. Vague projects don’t get done; next actions do.","Getting Things Done — David Allen"),
+    mkc("Habits & Systems","The two-minute rule","If a task takes less than two minutes, do it now rather than tracking it — filing it costs more than doing it. Everything bigger gets deferred into the system or delegated. Small stuff, handled on contact.","Getting Things Done — David Allen"),
+    mkc("Habits & Systems","Elimination before efficiency","Being busy is a form of laziness — lazy thinking and indiscriminate action. Doing something well doesn’t make it worth doing. Before I optimize a task, ask whether it should exist at all. Cut first, then streamline what’s left.","The 4-Hour Workweek — Tim Ferriss"),
+    mkc("Habits & Systems","Parkinson’s Law","Work expands to fill the time available. Give a task all day and it takes all day; give it two hours and it’s done in two. Set short, almost-uncomfortable deadlines to force focus and cut the fluff. Constrain the time on purpose.","The 4-Hour Workweek — Tim Ferriss"),
+    mkc("Habits & Systems","Low-information diet","Most of what I consume — news, feeds, noise — is neither important nor actionable, just anxiety with a refresh button. Ruthlessly cut inputs that don’t serve a decision I’m actually making. Protect attention like the scarce resource it is.","The 4-Hour Workweek — Tim Ferriss"),
+
+    mkc("Leadership","There’s no recipe for the hard things","The easy things have formulas. The genuinely hard things — laying someone off, holding on when it looks hopeless, the call with no good option — have none. The struggle IS the job. Stop waiting for a clean answer that isn’t coming and lead through the mess.","The Hard Thing About Hard Things — Ben Horowitz"),
+    mkc("Leadership","People, products, profits — in that order","Take care of the people first; if the people are right, they build the product and the product drives the profit. Reverse the order and it all erodes. How I treat my team isn’t soft — it’s the foundation everything else stands on.","The Hard Thing About Hard Things — Ben Horowitz"),
+    mkc("Leadership","Tell it like it is","Trust is built by sharing the bad news, not hiding it. People can handle hard truth; what they can’t handle is being spun or managed. Say the real thing plainly — morale survives honesty far better than it survives a cover-up.","The Hard Thing About Hard Things — Ben Horowitz"),
+    mkc("Parenting","Name it to tame it","When a big feeling has flooded Emilia, help her put it into words and tell the story of what happened. Naming the emotion brings the logical brain online to calm the emotional one. I can’t reason a flooded kid down, but I can help her name her way back.","The Whole-Brain Child — Siegel & Bryson"),
+    mkc("Parenting","Upstairs and downstairs brain","The “upstairs” thinking brain — self-control, planning, empathy — is under construction until the mid-20s. When my kid melts down, her downstairs reactive brain has taken over. She’s not giving me a hard time; her upstairs brain literally isn’t built yet.","The Whole-Brain Child — Siegel & Bryson"),
+    mkc("Parenting","Engage, don’t enrage","In a hot moment I can trigger the reactive downstairs brain with commands and threats, or engage the thinking upstairs brain with a question or a choice. “What’s your plan for this?” beats barking an order — it recruits the part of her I actually want running.","The Whole-Brain Child — Siegel & Bryson"),
+    mkc("Parenting","Acknowledge the wish, hold the limit","“No” lands better once the feeling is heard. “You wish you could have ice cream right now — you love it. It’s almost dinner, so it’s a treat tomorrow.” Giving her the wish in words, even in fantasy, softens the limit without moving it.","How to Talk So Little Kids Will Listen — Faber & King"),
+    mkc("Parenting","Be playful to get cooperation","Little kids live in play, so a command breeds a battle but a game gets buy-in. Make the toothbrush talk, race to the car, let the shirt “gobble” her arm. Silliness isn’t being a pushover — it’s the shortest path through resistance.","How to Talk So Little Kids Will Listen — Faber & King"),
+    mkc("Parenting","Describe the problem, don’t blame","Instead of “Why do you always leave your shoes there?” just describe it: “I see shoes in the doorway.” Stating the problem without the accusation invites her to fix it instead of defend herself. Describe what I see; let her solve it.","How to Talk So Little Kids Will Listen — Faber & King"),
+    mkc("Parenting","Don’t accommodate the anxiety","Every time I let Emilia avoid the scary thing or pile on reassurance, the worry gets a little stronger — accommodation feeds it. Love isn’t removing the fear; it’s walking her toward it. Comfort the child, don’t obey the anxiety.","Freeing Your Child from Anxiety — Tamar Chansky"),
+    mkc("Parenting","Externalize the worry","Give the worry a name and make it a separate thing — a worry bully, a brain glitch — so it’s Emilia-and-me against the worry, not me against Emilia. “That’s your worry brain talking, not the truth.” Then she can talk back to it instead of believing it.","Freeing Your Child from Anxiety — Tamar Chansky"),
+    mkc("Parenting","Climb the fear ladder","Facing a fear all at once overwhelms; facing it in small steps builds proof. Break the scary thing into a ladder and take one rung at a time, each success becoming evidence she can handle the next. Brave is built gradually, not demanded.","Freeing Your Child from Anxiety — Tamar Chansky"),
+    mkc("Parenting","Validate the feeling, back her ability","Two things at once: “I know this feels really scary” (I take the feeling seriously) AND “and I know you can handle it” (I believe in her). Not dismissing with “you’re fine,” not rescuing — empathy plus confidence is what grows courage.","Freeing Your Child from Anxiety — Tamar Chansky"),
+    mkc("Marriage","Talk about sex outside the bedroom","The worst time to work on our sex life is in the moment, half-clothed and vulnerable. Have low-pressure conversations in normal daylight — what we each like, want, miss. What we can talk about calmly, we can actually change.","Sex Talks — Vanessa Marin"),
+    mkc("Marriage","Curiosity, not criticism, in bed","Bring the posture of teammates exploring, not a critic grading. “I’d love to try…” and “what feels good to you?” open doors that complaints slam shut. We’re on the same side of this, figuring it out together.","Sex Talks — Vanessa Marin"),
+    mkc("Faith","The gospel in four parts","God, man, Christ, response: God is our holy Creator and King; we’ve all sinned and stand guilty; Jesus lived, died, and rose to take that judgment and give us his righteousness; and the call is to repent and trust him. That’s the frame the whole message hangs on.","What Is the Gospel? — Greg Gilbert"),
+    mkc("Faith","The gospel is news, not advice","Most religion is advice — things to do. The gospel is news — something already done. Not “try harder and be good enough,” but “Christ has done it, now believe.” I don’t work to earn it; I rest in what’s finished and let that reshape me.","What Is the Gospel? — Greg Gilbert"),
+    mkc("Faith","Don’t neglect the Spirit","I can run the Christian life on my own effort and quietly forget the Holy Spirit is meant to be the power source. A life that actually depends on the Spirit looks different — less white-knuckling, more surrender. Stop striving alone; ask and yield.","Forgotten God — Francis Chan"),
+    mkc("Faith","A Spirit-led life takes risk","If my life only makes sense because God is real, I’m leaning on the Spirit. If it runs fine on my own competence and comfort, maybe I’m not. Following him will sometimes look risky and inconvenient — that’s the point, not a malfunction.","Forgotten God — Francis Chan"),
+    mkc("Faith","Study with mind and heart","The heart cannot love what the mind does not know. Feelings-first Bible study fizzles; do the work of understanding the text — what it says, what it means — and let real knowledge of God fuel real love for him. Comprehension before application.","God of Deliverance — Jen Wilkin"),
+    mkc("Faith","The Bible is about God, not me","I come to Scripture asking “what does this say about me?” when the first question is “what does this reveal about God?” See his character first; my identity and marching orders only come into focus after I’ve seen him clearly.","God of Deliverance — Jen Wilkin"),
+    mkc("Faith","Rescued for his presence","Exodus: God doesn’t just free his people FROM slavery, he frees them FOR himself — to dwell among them. Salvation isn’t mainly about my comfort or escape; it’s about being brought near to God. He rescues, then he comes to dwell.","God of Freedom — Jen Wilkin"),
+    mkc("Faith","God wins — live with the end in view","Revelation pulls back the curtain: however dark it looks now, God is on the throne and he wins. That certain ending is meant to steady me in today’s trial — worship over worry, faithfulness over fear. Live backward from the victory that’s already sure.","Revelation — Jen Wilkin"),
+    mkc("Faith","Read the whole counsel","Don’t just graze the comfortable, familiar passages — read through all of Scripture systematically. The parts I’d skip are usually the ones that stretch me most, and the whole story only makes sense whole. A little every day, cover to cover.","The Bible in 52 Weeks"),
+
+    mkc("Growth","Talk to myself like a friend","When I mess up, my instinct is to lay into myself — but harsh self-criticism triggers shame and shutdown, not change. Talking to myself the way I would a friend I’m rooting for actually produces more follow-through. Kindness isn’t going soft; it’s what keeps me in the game.","Self-Compassion — Kristin Neff"),
+    mkc("Growth","A slip isn’t a collapse","My all-or-nothing wiring hears one missed workout or one bad day as “I’ve blown it, may as well quit.” But one data point isn’t the trend — the spiral does far more damage than the slip. Get back on the horse without the self-punishment tax. Missing once is human; quitting is the only real failure.","Self-Compassion — Kristin Neff"),
+    mkc("Growth","Rest is part of the work","Recovery isn’t the reward I earn after the work — it’s where the growth actually happens, in muscle and mind alike. My worth isn’t my output. Building in real rest breaks the burnout-then-crash cycle all-or-nothing people fall into. Schedule the rest before I need rescuing by it.","Sacred Rest — Saundra Dalton-Smith"),
+    mkc("Faith","Accepted, not auditioning","My standing with God doesn’t rise on a good day or fall on a bad one — grace already settled it. I’m not auditioning for love I have to earn; I’m living from love I already have. For a striver like me, this is the ground to stand on when I inevitably fall short.","Ephesians 2:8–9"),
+    mkc("Faith","Sabbath: stop and trust","God built rest into the week and commanded it — one day to stop producing. Sabbath is a weekly declaration that the world holds together without me and that I’m not what I make. Stopping when there’s still more to do is an act of trust, not laziness. Protect a real day off.","Sabbath — Exodus 20:8–11"),
+    mkc("Lifting","Train the heart, not just the muscles","My plan is 100% resistance — great for muscle, close to useless for cardiovascular fitness. VO₂max (aerobic capacity) is one of the strongest predictors of how long and how well I live. All the lifting in the world won’t cover this gap. Add dedicated cardio like it matters, because it does.","Outlive — Peter Attia"),
+    mkc("Lifting","Zone 2 is the base","Most of my cardio should be easy — conversational pace, ~60–70% max heart rate, 2–3 sessions a week — to build the aerobic engine and recovery. My daily walks count if I push the pace. Then add one harder session a week of intervals to drive VO₂max up. Easy base, occasional peak.","Outlive — Peter Attia"),
+    mkc("Lifting","Deload before you break","Every 4–8 weeks, take a lighter week — cut volume, back off intensity — so accumulated fatigue clears and I come back stronger. Planned recovery prevents the forced kind: injury, stalls, burnout. For a hard-charger, the deload is the discipline, not the weakness.","Renaissance Periodization"),
+    mkc("Parenting","Faith is caught more than taught","Emilia and Olivia will absorb my actual walk with God — do they see me pray, admit when I’m wrong, worship, lean on him under stress? — far more than any lesson I assign. I can’t hand down a faith I’m only performing. Let them watch the real thing.","Family discipleship"),
+    mkc("Parenting","Talk about God in the ordinary","Faith passes in the everyday moments — in the car, at meals, at bedtime — not just in formal sit-downs. Weave him into normal life so knowing God feels woven in, not bolted on. A natural comment beats a lecture every time.","Deuteronomy 6:6–7"),
+    mkc("Parenting","Give them room to own it","My job isn’t to manufacture my daughters’ faith — I can’t — it’s to point them to Christ and let it become theirs, not just inherited rule-following. Welcome their hard questions instead of fearing them. Real faith is owned, not forced.","Family discipleship"),
+    mkc("Marriage","Pray together","Praying with Megan — even short, even awkward — reaches a deeper intimacy than any date night. Sharing what we’re each carrying before God binds us in a way logistics never will. Lead it gently and don’t wait to feel like it; start small and keep it up.","Spiritual intimacy in marriage"),
+    mkc("Marriage","Money is a “we” conversation","Even as the CFP of the house, the point isn’t my competence — it’s that Megan and I face money as teammates. Regular, calm talks about goals, spending, and fears prevent the silent resentment finances breed. Same team, same page, on purpose.","Money & marriage"),
+    mkc("Marriage","Dream together","Beyond schedules and to-dos, we need a shared future to point at — what we want for the family in one year, five, ten. Couples drift when the dreaming stops and it’s all logistics. Keep a living picture of the life we’re building together.","Gottman — shared meaning"),
+    mkc("Marriage","Keep updating her love map","Knowing Megan’s inner world — her current stresses, hopes, what’s on her mind this week — isn’t a one-time achievement. She changes; keep asking and stay curious so I’m loving the woman she is now, not the one from five years ago. Update the map.","Gottman — love maps"),
+    mkc("Growth","Gratitude, on purpose","Naming what I’m thankful for — a few specific things, regularly — measurably lifts mood and starves the comparison and “never enough” machine. It’s not fluff; it’s one of the most evidence-backed habits there is. End the day with three things that went right.","Gratitude research — Robert Emmons"),
+    mkc("Growth","Relationships are the whole game","The longest study of human happiness found the number-one predictor of a good life isn’t money, status, or achievement — it’s the quality of close relationships. All my optimizing means little if I neglect Megan, the girls, and real friends. Invest there first.","The Good Life — Harvard Study"),
+    mkc("Faith","Prayer: talk to him like he’s there","Prayer isn’t a crisis hotline or a performance — it’s an ongoing, honest conversation. Ask, thank, confess, and actually listen. Keep it constant and real rather than eloquent. The point isn’t good words; it’s a real relationship kept open.","Prayer — Tim Keller"),
+    mkc("Faith","Don’t do faith alone","Christianity was never meant to be solo. I need a real community that knows me, spurs me on, and catches me when I drift — not just sermons I consume from a distance. Belong to a church body; be known, not anonymous.","Hebrews 10:24–25"),
+    mkc("Habits & Systems","Deep work","The ability to focus without distraction on one demanding thing is rare, valuable, and getting rarer. Batch the shallow stuff — email, pings — kill notifications, and protect long uninterrupted blocks for the work that actually matters. Attention is the asset; guard it.","Deep Work — Cal Newport"),
+    mkc("Leadership","Delegate to develop","Handing off real ownership — the outcome and the authority, not just a task list — grows my people and unclogs me at the same time. Doing it myself because it’s faster keeps them small and me buried. Delegate the what and let them own the how.","Multipliers — Liz Wiseman"),
+    mkc("Nutrition","Eat for your gut","My protein is dialed, but fiber and plants are the quiet gap — they drive gut health, fullness, and long-term disease protection. Aim for a big volume of vegetables and plenty of fiber daily, with variety across the week. Feed the gut, not just the muscle.","Fiber Fueled — Will Bulsiewicz"),
+
+    mkc("Marriage","Sex isn’t just intercourse","Most of us treat intercourse as the main event, but for most women it isn’t the most pleasurable part — and few reach orgasm from penetration alone. Treat foreplay as equal to intercourse, not a rushed preamble, and keep some clitoral stimulation going during intercourse itself, not only before. Build the whole thing around her pleasure, not just the finish.","Vanessa & Xander Marin"),
+    mkc("Marriage","Orgasm is a team goal, not a given","The unspoken script ends things at my finish. Flip it: her orgasm and mine are a shared project we both look out for, and neither is guaranteed or owed. And never make a specific outcome a target to hit — pressure backfires. Aim at connection and pleasure and let the rest follow.","Vanessa & Xander Marin"),
+    mkc("Marriage","Her quiet can be a good sign","If Megan goes quiet I read it as “it’s not working” — but many women go inward to focus on sensation, and silence often means the opposite. Instead of guessing, agree on a simple cue ahead of time: a hand squeeze that means “yes, this.” Then I’m not performing in the dark.","Vanessa & Xander Marin"),
+    mkc("Marriage","Take the performance pressure off","If I lose my erection mid-moment, that’s an arousal-level thing, not a verdict on me or on us — no emergency. The line that dissolves the pressure for both of us: “Is this feeling good for you? I’m happy to keep going as long as you are.” Curiosity about her beats panic about me.","Vanessa & Xander Marin"),
+    mkc("Marriage","Get out of my head, into the moment","Spectatoring — scoring my own performance and her reactions from the outside — kills the very thing I’m anxious about. The fix is to drop back into sensation and my own pleasure. I’m allowed to enjoy this for its own sake, not monitor it. Feel it, don’t grade it.","Vanessa & Xander Marin — Supercharge Your Confidence"),
+    mkc("Marriage","Schedule it earlier, build the anticipation","Scheduling sex isn’t unromantic — it protects the time and lets us build anticipation by flirting all day. One tweak: put it earlier in the evening, not right before sleep when we’re both fried and set up to disappoint each other. Plan it for when we’ve still got something in the tank.","Vanessa & Xander Marin — Bring Your Sex Life Back To Life"),
+    mkc("Marriage","Give feedback in two choices","“What do you like?” is hard to answer in the moment. Easier: offer a comparison — “this, or this?” — and let her pick, back and forth, dialing it in like Goldilocks. And to redirect without criticizing: “can you do that again, but a little slower?” Works just as well when she says it to me.","Vanessa & Xander Marin"),
+    mkc("Marriage","Frame grooming as desire, not criticism","“You need to shower” stings; “I want you — go get cleaned up for me first” lands. Same ask, framed as wanting rather than faulting. Shower together as foreplay, or gift a scent I love. And it runs both ways — my scratchy beard is her comfort too, so the beard oil isn’t just cosmetic.","Vanessa & Xander Marin"),
+    mkc("Marriage","Don’t withhold initiation to ‘be respectful’","Hanging back and waiting for Megan to lead can feel considerate, but it dumps all the vulnerability on one of us — and usually leaves neither of us feeling desired. Sharing the risk of reaching for her IS the respect. If we’re both stuck in a standstill, someone just has to go first — even flip a coin.","Vanessa & Xander Marin — The Art of Initiation"),
+    mkc("Marriage","Connection-first vs connected-through-sex","Some people need to feel emotionally close before they want sex; others feel close through sex. Megan and I may run opposite ways, and neither is wrong. Naming which each of us is ends a lot of silent frustration — I can give her the connection she needs first, and she can see that sex is partly how I connect.","Vanessa & Xander Marin — Your Best Week Ever"),
+
+    mkc("Parenting","Timeout WITH her, not away from her","Sending a kid off alone to “think about it” registers in her brain close to physical pain, and it buys compliance through a small dose of love-withdrawal — not real understanding. Instead, pause WITH Emilia: stay present, ride it out beside her, lead with “I’ve got you” before any problem-solving. Connection before correction.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Build a calm-down corner","Not a punishment spot — a cozy reset space with a few comforting things she can go to when emotions get big. It gives her somewhere to regulate that isn’t isolation or exile. A place to come back to center, chosen, not a bench she’s sentenced to.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Love that isn’t contingent","If my warmth and attention only show up when she’s behaving or achieving, I’m quietly teaching her that love has conditions. Praise the good, sure — but she should never have to earn my affection. She ought to feel most secure in me exactly when she’s at her worst.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Believe her feelings, stay available","Even when I doubt the facts around it, her emotional report deserves belief — “that sounds really hard” beats “you’re overreacting.” And being available matters more than extracting a talk on my schedule: leave the door open, don’t pry it. She’ll come when she trusts I’ll believe her.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Let her struggle","My instinct is to swoop in the second she’s frustrated, but the struggle itself is where capability gets built. Tolerating a little frustration — the puzzle, the zipper, the hard feeling — grows her more than my rescue does. Stay close and encouraging, but don’t rob her of the win by doing it for her.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Get curious, not furious","When Emilia does something maddening, the move is to investigate it — what’s underneath this? — instead of reacting to the surface. Same lens on my own flash of anger: get curious about what just got triggered in me. Curiosity turns a power struggle into a puzzle I can actually solve.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Discharge my own stress first","A meltdown is immaturity, not an attack on me — but my body doesn’t know that until I tell it. Before I respond, physically shake off the stress (or ground with 5-4-3-2-1) and name my own emotion out loud: “I’m feeling really frustrated right now.” I can’t calm her nervous system with a hijacked one of my own.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","No bad feelings — only limits on behavior","Every emotion she has is allowed, even the ugly ones; it’s the behavior that has limits. “You’re allowed to be furious. You’re not allowed to hit.” I don’t need to argue her out of the feeling — I validate the feeling AND hold the line on the action. Both, at once.","Jon Fogel — Whole Parent"),
+    mkc("Parenting","Make ‘just breathe’ playful","Telling a flooded kid to “just calm down and breathe” almost never works — it’s too abstract mid-meltdown. Give her something concrete and playful instead: blow out each “candle” finger one at a time, or smell-the-flower then blow-the-pinwheel. Same deep breath, but a version her brain can actually follow.","Jon Fogel — Whole Parent"),
+
+  ];
+}
+
+/* ── State + storage ── */
+let state={cards:[],meta:{streak:0,last:null},tab:"today"};
+let memOnly=false;
+// review session
+let sess={queue:null,i:0,flip:false,done:0};
+// library
+let lib={q:"",open:{Home:true,Work:true,Body:true,Mind:true},sel:null,edit:false};
+
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){const d=JSON.parse(raw);state.cards=d.cards||[];state.meta=d.meta||{streak:0,last:null};return;}
+  }catch(e){memOnly=true;}
+  state.cards=seed(); save();
+}
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify({cards:state.cards,meta:state.meta})); }
+  catch(e){ memOnly=true; }
+}
+
+/* ── Actions ── */
+function bumpStreak(){
+  const t=todayStr(),m=state.meta;
+  if(m.last===t)return;
+  if(m.last&&diffDays(t,m.last)===1)state.meta={streak:m.streak+1,last:t};
+  else state.meta={streak:1,last:t};
+}
+function rate(card,got){
+  bumpStreak();
+  const t=todayStr();
+  state.cards=state.cards.map(c=>{
+    if(c.id!==card.id)return c;
+    const box=got?Math.min(c.box+1,MAX_BOX):1;
+    return {...c,box,due:addDays(t,got?BOX_DAYS[box]:1)};
+  });
+  save();
+  sess.flip=false; sess.done++;
+  if(!got) sess.queue.push(card.id);
+  sess.i++;
+  render();
+}
+function addCard(d){
+  const t=todayStr();
+  state.cards.unshift({id:nid(),...d,domain:DOMAIN_OF[d.topic],box:1,due:t,created:t});
+  save(); toast("Added to the vault");
+}
+function updateCard(id,patch){
+  state.cards=state.cards.map(c=>c.id===id?{...c,...patch,domain:DOMAIN_OF[patch.topic||c.topic]}:c);
+  save(); toast("Saved");
+}
+function deleteCard(id){ state.cards=state.cards.filter(c=>c.id!==id); save(); toast("Removed"); }
+function dismissCard(card){
+  if(sess.queue)sess.queue=sess.queue.filter(id=>id!==card.id);
+  deleteCard(card.id);
+  sess.flip=false;
+  render();
+}
+
+function initSession(){
+  const t=todayStr();
+  sess.queue=state.cards.filter(c=>diffDays(c.due,t)<=0).sort((a,b)=>a.box-b.box).slice(0,10).map(c=>c.id);
+  sess.i=0; sess.flip=false; sess.done=0;
+}
+function dueCount(){const t=todayStr();return state.cards.filter(c=>diffDays(c.due,t)<=0).length;}
+function relDue(due){const d=diffDays(due,todayStr());if(d<=0)return"due now";if(d===1)return"tomorrow";return`in ${d} days`;}
+function byId(id){return state.cards.find(c=>c.id===id);}
+
+/* ── Export / Import ── */
+function exportData(){
+  const blob=new Blob([JSON.stringify({cards:state.cards,meta:state.meta},null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`codex-backup-${todayStr()}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast("Backup downloaded");
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!Array.isArray(d.cards))throw 0;
+      if(!confirm(`Replace your current ${state.cards.length} principles with ${d.cards.length} from this file?`))return;
+      state.cards=d.cards; state.meta=d.meta||state.meta; save(); render(); toast("Imported");
+    }catch(e){ toast("That file couldn't be read"); }
+  };
+  r.readAsText(file);
+}
+
+/* ── Toast ── */
+let toastT;
+function toast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1900);
+}
+
+/* ── Tab bar ── */
+const ICONS={
+  today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M9 3v4M15 3v4"/><circle cx="12" cy="15" r="2" fill="currentColor" stroke="none"/></svg>',
+  library:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h5v14H4zM10 5h4v14h-4z"/><path d="M15 6l4 1-3 13-4-1"/></svg>',
+  add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>'
+};
+function renderTabs(){
+  const due=dueCount();
+  const defs=[["today","Today"],["library","Library"],["add","Add"]];
+  document.getElementById("tabs").innerHTML=defs.map(([id,lb])=>
+    `<button class="tab ${state.tab===id?"on":""}" data-tab="${id}">
+      ${id==="today"&&due>0?`<span class="badge">${due}</span>`:""}
+      ${ICONS[id]}<span class="lb">${lb}</span>
+    </button>`).join("");
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+}
+function setTab(t){
+  state.tab=t;
+  if(t==="today")initSession();
+  if(t==="library"){lib.sel=null;lib.edit=false;}
+  render();
+}
+
+/* ── Views ── */
+function render(){
+  document.getElementById("streakN").textContent=state.meta.streak;
+  renderTabs();
+  const body=document.getElementById("body");
+  if(state.tab==="today")renderToday(body);
+  else if(state.tab==="library")renderLibrary(body);
+  else renderAdd(body);
+}
+
+function renderToday(body){
+  if(sess.queue===null)initSession();
+  const total=sess.queue.length;
+  if(total===0){
+    body.innerHTML=`<div class="center"><div class="mark">◆</div><h3>Caught up</h3>
+      <p>Nothing due today. Add a principle, or come back tomorrow and the deck will be waiting.</p></div>`;
+    return;
+  }
+  const card=sess.queue[sess.i]?byId(sess.queue[sess.i]):null;
+  if(!card){
+    body.innerHTML=`<div class="center"><div class="mark">✦</div><h3>Done for today</h3>
+      <p>${sess.done} ${sess.done===1?"card":"cards"} reviewed. Streak intact. That's the five minutes.</p></div>`;
+    return;
+  }
+  const heading=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  const dots=sess.queue.map((_,idx)=>`<span class="dot ${idx<sess.i?"on":""} ${idx===sess.i?"now":""}"></span>`).join("");
+  body.innerHTML=`
+    <div class="eyebrow">${heading}</div>
+    <div class="h1">Today's review</div>
+    <p class="sub">${total-sess.i} to go · tap the card to reveal</p>
+    <div class="dots">${dots}</div>
+    <div class="stage">
+      <div class="card ${sess.flip?"flip":""}" id="revcard" role="button" tabindex="0">
+        <div class="face front">
+          <div class="tag-row"><span class="chip dom">${esc(card.domain)}</span><span class="chip">${esc(card.topic)}</span></div>
+          <div class="front-txt">${esc(card.front)}</div>
+          <div class="flip-hint">Tap to reveal ↺</div>
+        </div>
+        <div class="face back">
+          <div class="tag-row"><span class="chip">${esc(card.topic)}</span></div>
+          <div class="back-txt">${esc(card.back)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="rate" id="rateRow"></div>`;
+  const flipIt=()=>{sess.flip=!sess.flip;render();};
+  const cardEl=document.getElementById("revcard");
+  cardEl.onclick=flipIt;
+  cardEl.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flipIt();}};
+  const row=document.getElementById("rateRow");
+  if(sess.flip){
+    row.innerHTML=`<button class="btn again" id="bAgain">Again</button><button class="btn got" id="bGot">Got it</button>`;
+    document.getElementById("bAgain").onclick=()=>rate(card,false);
+    document.getElementById("bGot").onclick=()=>rate(card,true);
+    const dz=document.createElement("div");
+    dz.className="dismiss-row";
+    dz.innerHTML=`<button class="dismiss" id="bDismiss">Not for me — remove this card</button>`;
+    row.after(dz);
+    document.getElementById("bDismiss").onclick=()=>{
+      if(confirm(`Remove this card from your deck?\n\n"${card.front}"\n\nThis can't be undone.`)) dismissCard(card);
+    };
+  }else{
+    row.innerHTML=`<button class="btn" id="bReveal">Reveal</button>`;
+    document.getElementById("bReveal").onclick=flipIt;
+  }
+}
+
+function renderLibrary(body){
+  if(lib.sel){const c=byId(lib.sel);if(c){renderDetail(body,c);return;}lib.sel=null;}
+  const ql=lib.q.trim().toLowerCase();
+  const match=c=>!ql||c.front.toLowerCase().includes(ql)||c.back.toLowerCase().includes(ql)||c.topic.toLowerCase().includes(ql);
+  let html=`
+    <div class="eyebrow">${state.cards.length} principles</div>
+    <div class="h1">Library</div>
+    <p class="sub">Everything you've distilled, by domain.</p>
+    <input class="search" id="lsearch" placeholder="Search principles…" value="${esc(lib.q)}" />`;
+  let first=true;
+  Object.keys(DOMAINS).forEach(dom=>{
+    const items=state.cards.filter(c=>c.domain===dom&&match(c));
+    if(ql&&items.length===0)return;
+    html+=`<div class="dom-h ${first?"first":""}" data-dom="${dom}">
+        <span class="dom-name">${dom}</span>
+        <span class="dom-count">${items.length} · ${lib.open[dom]?"hide":"show"}</span></div>
+      <div class="dom-rule"></div>`;
+    first=false;
+    if(lib.open[dom]){
+      html+= items.length ? items.map(c=>
+        `<div class="item" data-id="${c.id}"><div class="t">${esc(c.front)}</div>
+          <div class="m">${esc(c.topic)} · box ${c.box}</div></div>`).join("")
+        : `<p class="sub" style="margin-bottom:8px">No principles here yet.</p>`;
+    }
+  });
+  html+=`<div class="data-row">
+      <span class="label">Your data</span>
+      <div class="data-btns"><button id="expBtn">Export backup</button><button id="impBtn">Import backup</button></div>
+      <p class="data-note">${memOnly
+        ? "Heads up: this preview can't save to disk. The downloaded file works fully on your own device."
+        : "Saved on this device. Export a backup before switching phones or browsers."}</p>
+    </div>`;
+  body.innerHTML=html;
+
+  const s=document.getElementById("lsearch");
+  s.oninput=e=>{lib.q=e.target.value;renderLibrary(body);
+    const ns=document.getElementById("lsearch");ns.focus();ns.setSelectionRange(ns.value.length,ns.value.length);};
+  document.querySelectorAll(".dom-h").forEach(h=>h.onclick=()=>{lib.open[h.dataset.dom]=!lib.open[h.dataset.dom];renderLibrary(body);});
+  document.querySelectorAll(".item").forEach(it=>it.onclick=()=>{lib.sel=it.dataset.id;lib.edit=false;render();});
+  document.getElementById("expBtn").onclick=exportData;
+  document.getElementById("impBtn").onclick=()=>document.getElementById("importFile").click();
+}
+
+function renderDetail(body,card){
+  if(lib.edit){
+    body.innerHTML=`
+      <button class="back-link" id="cancelEdit">← cancel</button>
+      <div class="field"><label class="label">Topic</label>
+        <select class="select" id="eTopic">${Object.entries(DOMAINS).map(([d,ts])=>
+          `<optgroup label="${d}">${ts.map(t=>`<option value="${t}" ${t===card.topic?"selected":""}>${t}</option>`).join("")}</optgroup>`).join("")}</select></div>
+      <div class="field"><label class="label">Cue (front)</label><input class="input" id="eFront" value="${esc(card.front)}" /></div>
+      <div class="field"><label class="label">Principle (back)</label><textarea class="area" id="eBack">${esc(card.back)}</textarea></div>
+      <button class="save" id="eSave">Save changes</button>`;
+    document.getElementById("cancelEdit").onclick=()=>{lib.edit=false;render();};
+    document.getElementById("eSave").onclick=()=>{
+      const front=document.getElementById("eFront").value.trim();
+      const back=document.getElementById("eBack").value.trim();
+      const topic=document.getElementById("eTopic").value;
+      if(!front||!back)return;
+      updateCard(card.id,{front,back,topic}); lib.edit=false; render();
+    };
+    return;
+  }
+  body.innerHTML=`
+    <button class="back-link" id="toLib">← library</button>
+    <div class="tag-row"><span class="chip dom">${esc(card.domain)}</span><span class="chip">${esc(card.topic)}</span></div>
+    <div class="h1" style="margin-top:6px">${esc(card.front)}</div>
+    <div class="detail-txt">${esc(card.back)}</div>
+    <div class="meta-line">Box ${card.box} of ${MAX_BOX} · next review ${relDue(card.due)}</div>
+    ${card.source?`<div class="meta-line">Source: ${esc(card.source)}</div>`:""}
+    <button class="save" style="margin-top:22px" id="editBtn">Edit</button>
+    <button class="danger" id="delBtn">Delete principle</button>`;
+  document.getElementById("toLib").onclick=()=>{lib.sel=null;render();};
+  document.getElementById("editBtn").onclick=()=>{lib.edit=true;render();};
+  document.getElementById("delBtn").onclick=()=>{if(confirm("Delete this principle?")){deleteCard(card.id);lib.sel=null;render();}};
+}
+
+let add={dom:"Home",topic:"Parenting",front:"",back:"",source:""};
+function renderAdd(body){
+  body.innerHTML=`
+    <div class="eyebrow">Quick capture</div>
+    <div class="h1">Add a principle</div>
+    <p class="sub">One idea per card. It enters tomorrow's review automatically.</p>
+    <div class="field"><label class="label">Domain</label>
+      <div class="seg" id="segDom">${Object.keys(DOMAINS).map(d=>`<button data-d="${d}" class="${add.dom===d?"on":""}">${d}</button>`).join("")}</div></div>
+    <div class="field"><label class="label">Topic</label>
+      <select class="select" id="aTopic">${DOMAINS[add.dom].map(t=>`<option value="${t}" ${t===add.topic?"selected":""}>${t}</option>`).join("")}</select></div>
+    <div class="field"><label class="label">Cue — the front of the card</label>
+      <input class="input" id="aFront" placeholder="e.g. The discipline flow" value="${esc(add.front)}" /></div>
+    <div class="field"><label class="label">Principle — what you want to remember</label>
+      <textarea class="area" id="aBack" placeholder="The idea, in your own words…">${esc(add.back)}</textarea></div>
+    <div class="field"><label class="label">Source <span style="color:var(--muted2)">(optional)</span></label>
+      <input class="input" id="aSource" placeholder="Guide, book, or where it came from" value="${esc(add.source)}" /></div>
+    <button class="save" id="aSave">Add to the vault</button>`;
+  document.querySelectorAll("#segDom button").forEach(b=>b.onclick=()=>{
+    add.dom=b.dataset.d; add.topic=DOMAINS[add.dom][0];
+    add.front=document.getElementById("aFront").value; add.back=document.getElementById("aBack").value; add.source=document.getElementById("aSource").value;
+    renderAdd(body);
+  });
+  document.getElementById("aTopic").onchange=e=>add.topic=e.target.value;
+  const sync=()=>{add.front=document.getElementById("aFront").value;add.back=document.getElementById("aBack").value;add.source=document.getElementById("aSource").value;};
+  ["aFront","aBack","aSource"].forEach(id=>document.getElementById(id).oninput=sync);
+  document.getElementById("aSave").onclick=()=>{
+    sync();
+    if(!add.front.trim()||!add.back.trim()){toast("Add a cue and a principle");return;}
+    addCard({topic:add.topic,front:add.front.trim(),back:add.back.trim(),source:add.source.trim()});
+    add.front="";add.back="";add.source=""; renderAdd(body);
+  };
+}
+
+/* ── Boot ── */
+document.getElementById("importFile").addEventListener("change",e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value="";});
+load(); initSession(); render();
+</script>
+</body>
+</html>
