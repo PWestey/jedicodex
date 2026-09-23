@@ -158,6 +158,13 @@ body{background:radial-gradient(120% 70% at 80% 90%, rgba(46,110,130,.13) 0%, tr
 .dom-name{font-family:'Death Star','Fraunces',serif;letter-spacing:.03em;font-size:16px;}
 .front-txt{font-family:'Death Star','Fraunces',serif;font-size:20px;line-height:1.35;letter-spacing:.015em;}
 .glyphstrip{font-family:'Aurebesh',sans-serif;font-size:11px;letter-spacing:.34em;color:var(--kyber);opacity:.15;white-space:nowrap;overflow:hidden;text-align:center;padding:7px 0 8px;border-bottom:1px solid var(--line);user-select:none;}
+.practice-panel{border:1px solid var(--brass-dim);background:var(--panel);border-radius:14px;padding:18px;margin-bottom:26px;overflow-wrap:anywhere;}
+.practice-panel h2{font-family:'Fraunces',serif;font-size:22px;margin:0 0 10px;}
+.practice-panel p{line-height:1.5;}
+.practice-panel summary{cursor:pointer;color:var(--brass);padding:10px 0;}
+.practice-panel .area{min-height:76px;}
+.practice-panel .back-link{margin:14px 0 0;}
+.practice-history{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;}
 </style>
 </head>
 <body>
@@ -192,11 +199,16 @@ const diffDays=(a,b)=>{const[ay,am,ad]=a.split("-").map(Number);const[by,bm,bd]=
 let _id=0; const nid=()=>`c${Date.now().toString(36)}${(_id++).toString(36)}`;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
+const CONTENT_VERSION="leadership-practice-v1";
+const CONTENT_REVISIONS=[{"before": {"topic": "Leadership", "front": "Processes unlock scale", "back": "If the operation depends on me personally, I built a job, not a system. Document it, delegate it, and systemize until the team runs well when I'm not in the room. Busy meetings and full calendars can hide total key-person dependency.", "source": "Eric Partaker"}, "after": {"topic": "Leadership", "front": "Processes unlock scale", "back": "Document, delegate, and build systems that work when I am away. Also ask: who is learning to make the decisions I currently make? Give them practice explaining their judgment, not just following my instructions. Legacy includes people who can carry the work forward.", "source": "Eric Partaker; personal adaptation informed by Maxwell’s leadership principles"}}, {"before": {"topic": "Leadership", "front": "Get them talking", "back": "The small-talk skill isn't having lines to say — it's questions that get the other person talking about themselves. Curiosity carries every conversation; the person who feels heard remembers you as brilliant.", "source": "Cole Jennette — Small Talk Toolkit"}, "after": {"topic": "Leadership", "front": "Get them talking", "back": "Start a remote 1:1 with genuine interest in the person. Follow their answer before moving to the agenda. Ask, listen, and remember what matters to them. Connection deserves attention even when I need nothing.", "source": "Cole Jennette — Small Talk Toolkit; personal adaptation informed by Maxwell’s leadership principles"}}, {"before": {"topic": "Leadership", "front": "The Law of the Lid", "back": "My leadership ability is the ceiling on my effectiveness. A team can only rise as high as the leader running it — raise my lid and I raise everything under it. To grow the org’s results, grow the leader first: me.", "source": "The 21 Irrefutable Laws — John Maxwell"}, "after": {"topic": "Leadership", "front": "The Law of the Lid", "back": "My leadership can become a bottleneck. Where am I limiting clarity, trust, decisions, or ownership? Improve that constraint while also checking staffing, tools, and incentives.", "source": "The 21 Irrefutable Laws — John Maxwell; personal adaptation informed by Maxwell’s leadership principles"}}, {"before": {"topic": "Leadership", "front": "Your inner circle sets your ceiling", "back": "Those closest to me determine how far I go. Surround myself with people stronger than me in their lanes and my potential multiplies. Guard who’s in the room — they raise me or cap me.", "source": "The 21 Irrefutable Laws — John Maxwell"}, "after": {"topic": "Leadership", "front": "Your inner circle sets your ceiling", "back": "Build relationships with people whose strengths complement mine and who can challenge me honestly. Listen to different perspectives, welcome disagreement, and contribute to their growth too. Strong leadership is shared, not carried alone.", "source": "The 21 Irrefutable Laws — John Maxwell; personal adaptation informed by Maxwell’s leadership principles"}}, {"before": {"topic": "Leadership", "front": "Delegate to develop", "back": "Handing off real ownership — the outcome and the authority, not just a task list — grows my people and unclogs me at the same time. Doing it myself because it’s faster keeps them small and me buried. Delegate the what and let them own the how.", "source": "Multipliers — Liz Wiseman"}, "after": {"topic": "Leadership", "front": "Delegate to develop", "back": "Hand off real ownership with an agreed learning goal, decision authority, clear boundaries, and a check-in. Ask what capability this person wants to build, then choose a stretch responsibility together. Support their judgment without taking the work back.", "source": "Multipliers — Liz Wiseman; personal adaptation informed by Maxwell’s leadership principles"}}];
+const CONTENT_ADDITIONS=[{"topic": "Leadership", "front": "Who is better because I lead them?", "back": "My contribution includes what other people become. This week, choose one person on each team and ask what capability they want to build. Agree on one stretch responsibility, the support they need, and a follow-up. Measure the value from their side, too.", "source": "Adapted from John C. Maxwell — Law of Addition; personal application.", "contentId": "maxwell-practice-1"}, {"topic": "Habits & Systems", "front": "What specifically needs me?", "back": "Before the week fills up, protect time for Megan, each daughter, and prayer or Bible study. At work, identify the decision or development conversation that needs my involvement. Delegate, defer, or drop something less important to make room. My priorities need time, not just agreement.", "source": "Adapted from John C. Maxwell — Law of Priorities; personal application.", "contentId": "maxwell-practice-2"}];
+
 /* ── Seed ── */
 function seed(){
   const t=todayStr();
   const mkc=(topic,front,back,source)=>({id:nid(),topic,domain:DOMAIN_OF[topic],front,back,box:1,due:t,created:t,source});
   return [
+    ...CONTENT_ADDITIONS.map(c=>({...mkc(c.topic,c.front,c.back,c.source),contentId:c.contentId})),
     mkc("Parenting","The discipline flow","Name the behavior \u2192 clear instruction \u2192 one warning \u2192 a related consequence \u2192 reconnect. Reconnect is not optional. It's the step that keeps the relationship intact after the correction.","Whole Parent framework"),
     mkc("Parenting","My triggers","Non-compliance, whining, disrespect. When I feel the heat rise, that's the cue to slow down, not speed up. Regulate myself first, then address the behavior.","Personal + Whole Parent"),
     mkc("Parenting","Why my kids can trigger me like no one else","Two reasons: closeness (they live inside my boundaries) and projection (their behavior replays my own childhood). What I was shamed for as a kid \u2014 backtalk, whining, mess \u2014 is what will heat me up as a dad. If my reaction is bigger than the behavior, it's my history talking.","Jon Fogel \u2014 How to Not Lose Your Sh*t"),
@@ -239,8 +251,8 @@ function seed(){
     mkc("Leadership","Empathy, not sympathy","Feel with them; don't take the problem from them. The line strong leaders never cross: caring about the person becoming carrying their accountability. Support the human, hold the standard.","Your CEO Mentor"),
     mkc("Leadership","Unreasonable hospitality","Give people a level of care that's beyond reasonable \u2014 and treat adversity as the moment to create the story people retell. Problems handled extraordinarily build more loyalty than no problems at all.","Will Guidara via CGLP"),
     mkc("Leadership","The warrior mindset isn't the grind","It's not gritting teeth, hiding weakness, and working until collapse \u2014 that's the version being sold. It's disciplined stewardship of energy, honest self-assessment, and showing up ready. Recovery is part of the fight.","Order of Man"),
-    mkc("Leadership","Processes unlock scale","If the operation depends on me personally, I built a job, not a system. Document it, delegate it, and systemize until the team runs well when I'm not in the room. Busy meetings and full calendars can hide total key-person dependency.","Eric Partaker"),
-    mkc("Leadership","Get them talking","The small-talk skill isn't having lines to say \u2014 it's questions that get the other person talking about themselves. Curiosity carries every conversation; the person who feels heard remembers you as brilliant.","Cole Jennette \u2014 Small Talk Toolkit"),
+    mkc("Leadership","Processes unlock scale","Document, delegate, and build systems that work when I am away. Also ask: who is learning to make the decisions I currently make? Give them practice explaining their judgment, not just following my instructions. Legacy includes people who can carry the work forward.","Eric Partaker; personal adaptation informed by Maxwell’s leadership principles"),
+    mkc("Leadership","Get them talking","Start a remote 1:1 with genuine interest in the person. Follow their answer before moving to the agenda. Ask, listen, and remember what matters to them. Connection deserves attention even when I need nothing.","Cole Jennette — Small Talk Toolkit; personal adaptation informed by Maxwell’s leadership principles"),
     mkc("Leadership","The half-year review","Three questions at midyear: What did the first half teach me? What's working that I should double down on? What should I stop entirely? Look back on purpose before planning forward.","Eric Partaker"),
     mkc("Leadership","The comfort of inaction","The hardest part of every payoff is convincing yourself to start. Introvert, anxious, doesn't matter \u2014 long-term ambitions die in comfortable avoidance, not in failure. Do the uncomfortable thing first.","Your CEO Mentor \u2014 Moment 179"),
     mkc("Habits & Systems","Prompt playbook structure","Every reusable prompt: role, context, task, format, one example. Vague prompts get vague output. Always specify the format you want back.","Personal \u2014 AI Prompt Playbook v2.0"),
@@ -443,10 +455,10 @@ function seed(){
     mkc("Money","Automate the money","Willpower fails; systems don’t. Set automatic transfers on payday — to investments, savings, bills — so the right thing happens without a decision. Design the system once and let it run. What’s automated gets done.","I Will Teach You to Be Rich — Ramit Sethi"),
     mkc("Money","Conscious spending","Spend extravagantly on the few things I truly love, and cut costs mercilessly on everything I don’t. Guilt-free spending isn’t the enemy — unexamined spending is. Decide what my money is FOR, then fund that on purpose.","I Will Teach You to Be Rich — Ramit Sethi"),
     mkc("Money","Win the big wins","Agonizing over $3 lattes while ignoring the 5–10 big levers — savings rate, housing, salary, fees — is backwards. Get the handful of big decisions right and the small stuff barely matters. And a “rich life” is personal: define mine instead of copying anyone else’s.","I Will Teach You to Be Rich — Ramit Sethi"),
-    mkc("Leadership","The Law of the Lid","My leadership ability is the ceiling on my effectiveness. A team can only rise as high as the leader running it — raise my lid and I raise everything under it. To grow the org’s results, grow the leader first: me.","The 21 Irrefutable Laws — John Maxwell"),
+    mkc("Leadership","The Law of the Lid","My leadership can become a bottleneck. Where am I limiting clarity, trust, decisions, or ownership? Improve that constraint while also checking staffing, tools, and incentives.","The 21 Irrefutable Laws — John Maxwell; personal adaptation informed by Maxwell’s leadership principles"),
     mkc("Leadership","Leadership is influence","Not title, not position, not the org chart — leadership is influence, nothing more, nothing less. If no one’s following, I’m just taking a walk. Influence is earned through trust and track record, not granted by a badge.","The 21 Irrefutable Laws — John Maxwell"),
     mkc("Leadership","Leadership develops daily","Leaders are made in small daily disciplines, not in a single event or promotion. What I do consistently — reading, reflecting, reps — compounds into capacity. Lead myself well every day and the growth accrues.","The 21 Irrefutable Laws — John Maxwell"),
-    mkc("Leadership","Your inner circle sets your ceiling","Those closest to me determine how far I go. Surround myself with people stronger than me in their lanes and my potential multiplies. Guard who’s in the room — they raise me or cap me.","The 21 Irrefutable Laws — John Maxwell"),
+    mkc("Leadership","Your inner circle sets your ceiling","Build relationships with people whose strengths complement mine and who can challenge me honestly. Listen to different perspectives, welcome disagreement, and contribute to their growth too. Strong leadership is shared, not carried alone.","The 21 Irrefutable Laws — John Maxwell; personal adaptation informed by Maxwell’s leadership principles"),
     mkc("Leadership","Be a non-anxious presence","The most important thing I bring to a tense room isn’t answers — it’s my own calm. When everyone’s reactive, the leader who stays steady and self-regulated lowers the whole system’s anxiety. Manage my reactivity first; it’s contagious either way.","A Failure of Nerve — Edwin Friedman"),
     mkc("Leadership","Stay differentiated","Lead from my own clear values instead of bending to whoever’s most upset. Staying connected to people WITHOUT absorbing their emotions or caving to pressure is the whole skill. Be my own person while staying in relationship.","A Failure of Nerve — Edwin Friedman"),
     mkc("Leadership","Don’t let the most anxious set the pace","Systems organize around their most reactive, dependent, or demanding member. If I keep adapting to them, I hand them control. Lead toward strength and health, not toward whoever complains loudest.","A Failure of Nerve — Edwin Friedman"),
@@ -513,7 +525,7 @@ function seed(){
     mkc("Faith","Prayer: talk to him like he’s there","Prayer isn’t a crisis hotline or a performance — it’s an ongoing, honest conversation. Ask, thank, confess, and actually listen. Keep it constant and real rather than eloquent. The point isn’t good words; it’s a real relationship kept open.","Prayer — Tim Keller"),
     mkc("Faith","Don’t do faith alone","Christianity was never meant to be solo. I need a real community that knows me, spurs me on, and catches me when I drift — not just sermons I consume from a distance. Belong to a church body; be known, not anonymous.","Hebrews 10:24–25"),
     mkc("Habits & Systems","Deep work","The ability to focus without distraction on one demanding thing is rare, valuable, and getting rarer. Batch the shallow stuff — email, pings — kill notifications, and protect long uninterrupted blocks for the work that actually matters. Attention is the asset; guard it.","Deep Work — Cal Newport"),
-    mkc("Leadership","Delegate to develop","Handing off real ownership — the outcome and the authority, not just a task list — grows my people and unclogs me at the same time. Doing it myself because it’s faster keeps them small and me buried. Delegate the what and let them own the how.","Multipliers — Liz Wiseman"),
+    mkc("Leadership","Delegate to develop","Hand off real ownership with an agreed learning goal, decision authority, clear boundaries, and a check-in. Ask what capability this person wants to build, then choose a stretch responsibility together. Support their judgment without taking the work back.","Multipliers — Liz Wiseman; personal adaptation informed by Maxwell’s leadership principles"),
     mkc("Nutrition","Eat for your gut","My protein is dialed, but fiber and plants are the quiet gap — they drive gut health, fullness, and long-term disease protection. Aim for a big volume of vegetables and plenty of fiber daily, with variety across the week. Feed the gut, not just the muscle.","Fiber Fueled — Will Bulsiewicz"),
 
     mkc("Marriage","Sex isn’t just intercourse","Most of us treat intercourse as the main event, but for most women it isn’t the most pleasurable part — and few reach orgasm from penetration alone. Treat foreplay as equal to intercourse, not a rushed preamble, and keep some clitoral stimulation going during intercourse itself, not only before. Build the whole thing around her pleasure, not just the finish.","Vanessa & Xander Marin"),
@@ -541,7 +553,7 @@ function seed(){
 }
 
 /* ── State + storage ── */
-let state={cards:[],meta:{streak:0,last:null},tab:"today"};
+let state={cards:[],meta:{streak:0,last:null},tab:"today",contentUpdates:[],practice:null,practiceHistory:[]};
 let memOnly=false;
 // review session
 let sess={queue:null,i:0,flip:false,done:0};
@@ -551,12 +563,18 @@ let lib={q:"",open:{Home:true,Work:true,Body:true,Mind:true},sel:null,edit:false
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){const d=JSON.parse(raw);state.cards=d.cards||[];state.meta=d.meta||{streak:0,last:null};return;}
+    if(raw){const d=JSON.parse(raw);state.cards=d.cards||[];state.meta=d.meta||{streak:0,last:null};restoreExtras(d);return;}
   }catch(e){memOnly=true;}
-  state.cards=seed(); save();
+  state.cards=seed(); state.contentUpdates=[CONTENT_VERSION]; save();
+}
+function backupData(){return {cards:state.cards,meta:state.meta,contentUpdates:state.contentUpdates,practice:state.practice,practiceHistory:state.practiceHistory};}
+function restoreExtras(d){
+  state.contentUpdates=Array.isArray(d.contentUpdates)?d.contentUpdates:[];
+  state.practice=d.practice||null;
+  state.practiceHistory=Array.isArray(d.practiceHistory)?d.practiceHistory:[];
 }
 function save(){
-  try{ localStorage.setItem(KEY,JSON.stringify({cards:state.cards,meta:state.meta})); }
+  try{ localStorage.setItem(KEY,JSON.stringify(backupData())); }
   catch(e){ memOnly=true; }
 }
 
@@ -614,7 +632,7 @@ function byId(id){return state.cards.find(c=>c.id===id);}
 
 /* ── Export / Import ── */
 function exportData(){
-  const blob=new Blob([JSON.stringify({cards:state.cards,meta:state.meta},null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify(backupData(),null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download=`codex-backup-${todayStr()}.json`;
@@ -628,7 +646,7 @@ function importData(file){
       const d=JSON.parse(r.result);
       if(!Array.isArray(d.cards))throw 0;
       if(!confirm(`Replace your current ${state.cards.length} principles with ${d.cards.length} from this file?`))return;
-      state.cards=d.cards; state.meta=d.meta||state.meta; save(); render(); toast("Imported");
+      state.cards=d.cards; state.meta=d.meta||state.meta; restoreExtras(d); sess.queue=null; practiceDraft=null; save(); render(); toast("Imported");
     }catch(e){ toast("That file couldn't be read"); }
   };
   r.readAsText(file);
@@ -676,7 +694,11 @@ function render(){
   document.getElementById("streakN").textContent=state.meta.streak;
   renderTabs();
   const body=document.getElementById("body");
-  if(state.tab==="today")renderToday(body);
+  if(state.tab==="today"){
+    body.innerHTML='<div id="practicePanel"></div><div id="reviewPanel"></div>';
+    renderPractice(document.getElementById("practicePanel"));
+    renderToday(document.getElementById("reviewPanel"));
+  }
   else if(state.tab==="library")renderLibrary(body);
   else renderAdd(body);
 }
@@ -691,8 +713,8 @@ function renderToday(body){
   }
   const card=sess.queue[sess.i]?byId(sess.queue[sess.i]):null;
   if(!card){
-    body.innerHTML=`<div class="center"><div class="mark">✦</div><h3>Training complete</h3>
-      <p>${sess.done} ${sess.done===1?"card":"cards"} reviewed. The streak holds. That's the training done.</p></div>`;
+    body.innerHTML=`<div class="center"><div class="mark">✦</div><h3>Review complete</h3>
+      <p>${sess.done} ${sess.done===1?"card":"cards"} reviewed. Choose one small way to put a principle into practice.</p></div>`;
     return;
   }
   const heading=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
@@ -729,6 +751,9 @@ function renderToday(body){
     dz.className="dismiss-row";
     dz.innerHTML=`<button class="dismiss" id="bDismiss">Not for me — remove this card</button>`;
     row.after(dz);
+    const practiceButton=document.createElement("button");
+    practiceButton.className="save";practiceButton.textContent="Practice this week";
+    practiceButton.onclick=()=>choosePractice(card);dz.before(practiceButton);
     document.getElementById("bDismiss").onclick=()=>{
       if(confirm(`Remove this card from your deck?\n\n"${card.front}"\n\nThis can't be undone.`)) dismissCard(card);
     };
@@ -770,7 +795,8 @@ function renderLibrary(body){
         ? "Heads up: this preview can't save to disk. The downloaded file works fully on your own device."
         : "Saved on this device. Export a backup before switching phones or browsers."}</p>
     </div>`;
-  body.innerHTML=html;
+  body.innerHTML='<div id="contentUpdate"></div>'+html;
+  renderContentUpdate(document.getElementById("contentUpdate"));
 
   const s=document.getElementById("lsearch");
   s.oninput=e=>{lib.q=e.target.value;renderLibrary(body);
@@ -808,9 +834,11 @@ function renderDetail(body,card){
     <div class="detail-txt">${esc(card.back)}</div>
     <div class="meta-line">Box ${card.box} of ${MAX_BOX} · next review ${relDue(card.due)}</div>
     ${card.source?`<div class="meta-line">Source: ${esc(card.source)}</div>`:""}
+    <button class="save" id="practiceCard">Practice this week</button>
     <button class="save" style="margin-top:22px" id="editBtn">Edit</button>
     <button class="danger" id="delBtn">Delete principle</button>`;
   document.getElementById("toLib").onclick=()=>{lib.sel=null;render();};
+  document.getElementById("practiceCard").onclick=()=>choosePractice(card);
   document.getElementById("editBtn").onclick=()=>{lib.edit=true;render();};
   document.getElementById("delBtn").onclick=()=>{if(confirm("Delete this principle?")){deleteCard(card.id);lib.sel=null;render();}};
 }
@@ -846,6 +874,56 @@ function renderAdd(body){
     addCard({topic:add.topic,front:add.front.trim(),back:add.back.trim(),source:add.source.trim()});
     add.front="";add.back="";add.source=""; renderAdd(body);
   };
+}
+
+/* Merge content updates without resetting personal edits or review progress. */
+function contentPlan(){
+  const edits=[],skipped=[];
+  CONTENT_REVISIONS.forEach(r=>{
+    const c=state.cards.find(c=>c.front===r.before.front);
+    if(c&&['topic','front','back','source'].every(k=>c[k]===r.before[k]))edits.push({card:c,after:r.after});
+    else skipped.push(r.before.front);
+  });
+  return {edits,skipped,additions:CONTENT_ADDITIONS.filter(n=>!state.cards.some(c=>c.contentId===n.contentId||c.front===n.front))};
+}
+function renderContentUpdate(el){
+  if(state.contentUpdates.includes(CONTENT_VERSION))return;
+  const plan=contentPlan();
+  el.innerHTML=`<section class="practice-panel"><h2>Leadership library update</h2><p>${plan.additions.length} new principles · ${plan.edits.length} revisions. Review progress stays intact. Edited or removed cards are left alone.</p><details><summary>Preview changes</summary>${[...plan.additions,...plan.edits.map(e=>e.after)].map(c=>`<p><strong>${esc(c.front)}</strong><br>${esc(c.back)}</p>`).join('')}${plan.skipped.length?`<p>Left unchanged or absent: ${plan.skipped.map(esc).join('; ')}.</p>`:''}</details><button class="save" id="applyContent">Apply library update</button></section>`;
+  document.getElementById('applyContent').onclick=()=>{
+    const latest=contentPlan(),t=todayStr();
+    latest.edits.forEach(({card,after})=>Object.assign(card,after));
+    latest.additions.forEach(c=>state.cards.push({...c,id:nid(),domain:DOMAIN_OF[c.topic],box:1,due:t,created:t}));
+    state.contentUpdates.push(CONTENT_VERSION);save();sess.queue=null;render();toast('Updated; personal edits preserved');
+  };
+}
+/* Practice remains independent of recall scheduling. */
+let practiceDraft=null;
+function choosePractice(card){
+  if(state.practice){state.tab='today';render();toast('Release your current practice before choosing another');return;}
+  practiceDraft={cardId:card.id,title:card.front,action:'',when:''};state.tab='today';render();document.getElementById('practiceAction').focus();
+}
+function renderPractice(el){
+  const p=state.practice;
+  let html='<section class="practice-panel"><h2>Practice this week</h2>';
+  if(practiceDraft){
+    html+=`<p>${esc(practiceDraft.title)}</p><div class="field"><label class="label" for="practiceAction">One small action</label><textarea class="area" id="practiceAction" placeholder="Agree on one decision my teammate can own.">${esc(practiceDraft.action)}</textarea></div><div class="field"><label class="label" for="practiceWhen">When will I do it?</label><input class="input" id="practiceWhen" placeholder="Tuesday’s 1:1 at 10am" value="${esc(practiceDraft.when)}"></div><button class="save" id="pinPractice">Pin this practice</button><button class="back-link" id="cancelPractice">Cancel</button>`;
+  }else if(p){
+    html+=`<p class="meta-line">Pinned ${esc(p.started)} · ${diffDays(todayStr(),p.started)>=7?'Ready for a weekly reflection':'One principle, one small action'}</p><p><strong>${esc(p.title)}</strong></p><p>${esc(p.action)}</p><p class="meta-line">When: ${esc(p.when)}</p><details><summary>Reflect or adjust</summary>${[['tried','What did I try?'],['happened','What happened?'],['adjust','What will I adjust?']].map(([k,label])=>`<div class="field"><label class="label" for="reflect-${k}">${label}</label><textarea class="area" id="reflect-${k}">${esc(p.reflection?.[k]||'')}</textarea></div>`).join('')}<p class="data-note">Notes save as you write. It is okay if the action did not happen.</p><button class="save" id="finishPractice">Save reflection &amp; release practice</button><button class="back-link" id="releasePractice">Release without reflection</button></details>`;
+  }else html+='<p>Choose one principle, give it a small action, and make room for it this week.</p><button class="save" id="browsePractice">Choose from Library</button><p class="data-note">You can also choose a card during today’s review. Practice is separate from your recall streak.</p>';
+  if(state.practiceHistory.length)html+=`<details class="practice-history"><summary>Past practices (${state.practiceHistory.length})</summary>${[...state.practiceHistory].reverse().map(h=>`<div class="practice-history"><strong>${esc(h.title)}</strong><p>${esc(h.action)}</p><p class="meta-line">${esc(h.started)} → ${esc(h.finished)} · ${esc(h.when)}</p>${[['tried','Tried'],['happened','Observed'],['adjust','Next time']].filter(([k])=>h.reflection?.[k]).map(([k,label])=>`<p><strong>${label}:</strong> ${esc(h.reflection[k])}</p>`).join('')}</div>`).join('')}</details>`;
+  el.innerHTML=html+'</section>';
+  if(practiceDraft){
+    const capture=()=>{practiceDraft.action=document.getElementById('practiceAction').value;practiceDraft.when=document.getElementById('practiceWhen').value;};
+    document.getElementById('practiceAction').oninput=capture;document.getElementById('practiceWhen').oninput=capture;
+    document.getElementById('cancelPractice').onclick=()=>{practiceDraft=null;render();};
+    document.getElementById('pinPractice').onclick=()=>{capture();if(!practiceDraft.action.trim()||!practiceDraft.when.trim()){toast('Add an action and a time');return;}state.practice={...practiceDraft,action:practiceDraft.action.trim(),when:practiceDraft.when.trim(),started:todayStr(),reflection:{}};practiceDraft=null;save();render();toast('Practice pinned');};
+  }else if(p){
+    ['tried','happened','adjust'].forEach(k=>document.getElementById('reflect-'+k).oninput=e=>{p.reflection={...p.reflection,[k]:e.target.value};save();});
+    const finish=()=>{state.practiceHistory.push({...p,finished:todayStr()});state.practice=null;save();render();};
+    document.getElementById('finishPractice').onclick=()=>{if(!Object.values(p.reflection||{}).some(v=>v.trim())){toast('Add a reflection, or release without one');return;}finish();};
+    document.getElementById('releasePractice').onclick=finish;
+  }else document.getElementById('browsePractice').onclick=()=>setTab('library');
 }
 
 /* ── Boot ── */
